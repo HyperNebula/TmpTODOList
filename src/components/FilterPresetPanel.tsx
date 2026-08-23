@@ -35,6 +35,16 @@ export function FilterPresetPanel({ position }: Props) {
 
   if (filterPresetPanelPosition !== position) return null;
 
+  const applyPreset = (preset: typeof filterPresets[0]) => {
+    store.setFilter(preset.filter);
+    if (preset.sort !== undefined) {
+      store.setSort(preset.sort);
+    }
+    if (preset.focusTaskId !== undefined) {
+      store.setFocusTask(preset.focusTaskId);
+    }
+  };
+
   const hasPresets = filterPresets.length > 0;
 
   if (position === "top") {
@@ -47,7 +57,7 @@ export function FilterPresetPanel({ position }: Props) {
               <div key={preset.id} className="preset-chip-wrapper">
                 <button
                   className="preset-chip"
-                  onClick={() => store.setFilter(preset.filter)}
+                  onClick={() => applyPreset(preset)}
                   title="Apply preset"
                 >
                   {preset.name}
@@ -122,7 +132,12 @@ export function FilterPresetPanel({ position }: Props) {
               } else {
                 const preset = filterPresets.find((p) => p.id === confirmState.id);
                 if (preset) {
-                  saveFilterPreset({ ...preset, filter: store.filter });
+                  saveFilterPreset({ 
+                    ...preset, 
+                    filter: store.filter,
+                    sort: store.sort,
+                    focusTaskId: store.focusTaskId
+                  });
                 }
               }
               setConfirmState(null);
@@ -155,7 +170,7 @@ export function FilterPresetPanel({ position }: Props) {
                 <div key={preset.id} className="preset-row">
                   <button
                     className="preset-btn"
-                    onClick={() => store.setFilter(preset.filter)}
+                    onClick={() => applyPreset(preset)}
                     title="Apply preset"
                   >
                     {preset.name}
@@ -232,7 +247,12 @@ export function FilterPresetPanel({ position }: Props) {
               } else {
                 const preset = filterPresets.find((p) => p.id === confirmState.id);
                 if (preset) {
-                  saveFilterPreset({ ...preset, filter: store.filter });
+                  saveFilterPreset({
+                    ...preset,
+                    filter: store.filter,
+                    sort: store.sort,
+                    focusTaskId: store.focusTaskId
+                  });
                 }
               }
               setConfirmState(null);

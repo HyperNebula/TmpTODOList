@@ -171,4 +171,6 @@ export interface FilterPreset {
   id: string;
   name: string;
   filter: FilterState;
+  sort?: SortState | null;
+  focusTaskId?: string | null;
 }

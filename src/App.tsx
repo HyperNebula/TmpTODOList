@@ -691,6 +691,8 @@ function App() {
                   id: crypto.randomUUID(),
                   name: val.trim(),
                   filter: store.filter,
+                  sort: store.sort,
+                  focusTaskId: store.focusTaskId,
                 });
               }
               setPresetPromptState(null);
