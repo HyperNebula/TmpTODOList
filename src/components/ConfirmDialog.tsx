@@ -28,9 +28,13 @@ export function ConfirmDialog({
   onThird,
 }: ConfirmDialogProps) {
   return (
-    <div className="confirm-overlay" onMouseDown={(e) => {
-      if (e.target === e.currentTarget) onCancel();
-    }} onClick={(e) => e.stopPropagation()}>
+    <div className="confirm-overlay" 
+      onKeyDown={(e) => e.stopPropagation()}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }} 
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="confirm-dialog">
         <h2 className="confirm-title">{title}</h2>
         <p className="confirm-message">{message}</p>
