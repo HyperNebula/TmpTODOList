@@ -382,6 +382,7 @@ const DEFAULT_SETTINGS = {
   calendarZoom: 1.5,
   compactTimeblockDisplay: "hover" as "hover" | "all" | "notes",
   timeblockEditMode: "button" as "button" | "doubleClick" | "singleClick",
+  showTimeblockTimes: false,
   defaultAppView: "tasks" as "tasks" | "calendar" | "lastOpen",
   lastOpenView: "tasks" as "tasks" | "calendar",
   settingsLoaded: false,
@@ -414,6 +415,7 @@ export interface SettingsState {
   calendarZoom: number;
   compactTimeblockDisplay: "hover" | "all" | "notes";
   timeblockEditMode: "button" | "doubleClick" | "singleClick";
+  showTimeblockTimes: boolean;
   defaultAppView: "tasks" | "calendar" | "lastOpen";
   lastOpenView: "tasks" | "calendar";
   settingsLoaded: boolean;
@@ -447,6 +449,7 @@ export interface SettingsState {
   setCalendarZoom: (zoom: number) => void;
   setCompactTimeblockDisplay: (display: "hover" | "all" | "notes") => void;
   setTimeblockEditMode: (mode: "button" | "doubleClick" | "singleClick") => void;
+  setShowTimeblockTimes: (show: boolean) => void;
   setDefaultAppView: (view: "tasks" | "calendar" | "lastOpen") => void;
   setLastOpenView: (view: "tasks" | "calendar") => void;
   setHotkeyModifier: (modifier: string) => void;
@@ -498,6 +501,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setCalendarZoom: (zoom) => set({ calendarZoom: zoom }),
   setCompactTimeblockDisplay: (display) => set({ compactTimeblockDisplay: display }),
   setTimeblockEditMode: (mode) => set({ timeblockEditMode: mode }),
+  setShowTimeblockTimes: (show) => set({ showTimeblockTimes: show }),
   setDefaultAppView: (view) => set({ defaultAppView: view }),
   setLastOpenView: (view) => set({ lastOpenView: view }),
   setHotkeyModifier: (modifier) => set({ hotkeyModifier: modifier }),
@@ -545,6 +549,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         calendarZoom?: number;
         compactTimeblockDisplay?: "hover" | "all" | "notes";
         timeblockEditMode?: "button" | "doubleClick" | "singleClick";
+        showTimeblockTimes?: boolean;
         defaultAppView?: "tasks" | "calendar" | "lastOpen";
         lastOpenView?: "tasks" | "calendar";
         hotkeyModifier?: string;
@@ -579,6 +584,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
           ...(saved.calendarZoom !== undefined && { calendarZoom: saved.calendarZoom }),
           ...(saved.compactTimeblockDisplay && { compactTimeblockDisplay: saved.compactTimeblockDisplay }),
           ...(saved.timeblockEditMode && { timeblockEditMode: saved.timeblockEditMode }),
+          ...(saved.showTimeblockTimes !== undefined && { showTimeblockTimes: saved.showTimeblockTimes }),
           ...(saved.defaultAppView && { defaultAppView: saved.defaultAppView }),
           ...(saved.lastOpenView && { lastOpenView: saved.lastOpenView }),
           ...(saved.hotkeyModifier && { hotkeyModifier: saved.hotkeyModifier }),
@@ -625,6 +631,7 @@ useSettingsStore.subscribe((state) => {
     calendarZoom: state.calendarZoom,
     compactTimeblockDisplay: state.compactTimeblockDisplay,
     timeblockEditMode: state.timeblockEditMode,
+    showTimeblockTimes: state.showTimeblockTimes,
     defaultAppView: state.defaultAppView,
     lastOpenView: state.lastOpenView,
     hotkeyModifier: state.hotkeyModifier,

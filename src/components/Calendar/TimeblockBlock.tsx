@@ -40,7 +40,7 @@ export function TimeblockBlock({
   onEditTimeblock,
   onToggleComplete,
 }: TimeblockBlockProps) {
-  const { compactTimeblockDisplay, timeblockEditMode } = useSettingsStore();
+  const { compactTimeblockDisplay, timeblockEditMode, showTimeblockTimes } = useSettingsStore();
 
   // ── Drag & Resize Local State ───────────────────────────────────────────────
   const dragStateRef = useRef<{ startStr?: string; endStr?: string; deltaX?: number } | null>(null);
@@ -61,6 +61,13 @@ export function TimeblockBlock({
 
   const top = startMin * pxPerMin + 2;
   const height = Math.max(durationMin * pxPerMin - 4, 10);
+
+  const timeFormatter = new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  const startTimeDisplay = timeFormatter.format(new Date(effectiveStart));
+  const endTimeDisplay = timeFormatter.format(new Date(effectiveEnd));
 
   // ── Resize state ────────────────────────────────────────────────────────────
   const resizeRef = useRef<{ startY: number; origEndTime: string } | null>(null);
@@ -211,6 +218,12 @@ export function TimeblockBlock({
       </button>
 
       {block.title && <div className="tb-title" style={{ paddingRight: '20px' }}>{block.title}</div>}
+
+      {showTimeblockTimes && (
+        <div className="tb-time" style={{ fontSize: '0.7rem', opacity: 0.8, paddingRight: '20px' }}>
+          {startTimeDisplay} - {endTimeDisplay}
+        </div>
+      )}
 
       {block.notes && (
         <div className="tb-notes" style={{ fontSize: '0.8rem', opacity: 0.8, margin: '2px 8px', whiteSpace: 'pre-wrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

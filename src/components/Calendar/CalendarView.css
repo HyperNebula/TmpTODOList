@@ -399,6 +399,7 @@
   transition: none !important;
   cursor: grabbing !important;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  opacity: 0.8 !important;
 }
 
 .timeblock-block--compact-hover:not(:hover) .tb-notes,

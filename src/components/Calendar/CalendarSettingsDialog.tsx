@@ -63,6 +63,7 @@ export function CalendarSettingsDialog({ onClose }: Props) {
     calendarZoom,
     compactTimeblockDisplay,
     timeblockEditMode,
+    showTimeblockTimes,
     defaultAppView,
     setActiveThemeId,
     saveCustomTheme,
@@ -76,6 +77,7 @@ export function CalendarSettingsDialog({ onClose }: Props) {
     setCalendarZoom,
     setCompactTimeblockDisplay,
     setTimeblockEditMode,
+    setShowTimeblockTimes,
     setDefaultAppView,
     resetSettings,
   } = useSettingsStore();
@@ -277,6 +279,12 @@ export function CalendarSettingsDialog({ onClose }: Props) {
                   <option value="doubleClick">Double-click Block</option>
                   <option value="singleClick">Single-click Block</option>
                 </select>
+              </div>
+              <div className="settings-group">
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={showTimeblockTimes} onChange={(e) => setShowTimeblockTimes(e.target.checked)} />
+                  <strong>Show Start and End Time on Blocks</strong>
+                </label>
               </div>
             </>
           )}
