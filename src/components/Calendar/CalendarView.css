@@ -384,7 +384,6 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  min-height: min-content;
 }
 
 .timeblock-block:hover { 
