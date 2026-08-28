@@ -171,6 +171,12 @@ export function CalendarSettingsDialog({ onClose }: Props) {
                   <span>3.0x</span>
                 </div>
               </div>
+              <div className="settings-group">
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={showTimeblockTimes} onChange={(e) => setShowTimeblockTimes(e.target.checked)} />
+                  <strong>Show Start and End Time on Blocks</strong>
+                </label>
+              </div>
             </>
           )}
           {activeTab === "themes" && (
@@ -279,12 +285,6 @@ export function CalendarSettingsDialog({ onClose }: Props) {
                   <option value="doubleClick">Double-click Block</option>
                   <option value="singleClick">Single-click Block</option>
                 </select>
-              </div>
-              <div className="settings-group">
-                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "normal" }}>
-                  <input type="checkbox" checked={showTimeblockTimes} onChange={(e) => setShowTimeblockTimes(e.target.checked)} />
-                  <strong>Show Start and End Time on Blocks</strong>
-                </label>
               </div>
             </>
           )}
