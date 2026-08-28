@@ -220,7 +220,7 @@ export function TimeblockBlock({
       {block.title && <div className="tb-title" style={{ paddingRight: '20px' }}>{block.title}</div>}
 
       {showTimeblockTimes && (
-        <div className="tb-time" style={{ fontSize: '0.7rem', opacity: 0.8, paddingRight: '20px', flexShrink: 0 }}>
+        <div className="tb-time" style={{ fontSize: '0.7rem', opacity: 0.8, paddingRight: '20px' }}>
           {startTimeDisplay} - {endTimeDisplay}
         </div>
       )}
