@@ -220,13 +220,13 @@ export function TimeblockBlock({
       {block.title && <div className="tb-title" style={{ paddingRight: '20px' }}>{block.title}</div>}
 
       {showTimeblockTimes && (
-        <div className="tb-time" style={{ fontSize: '0.7rem', opacity: 0.8, paddingRight: '20px' }}>
+        <div className="tb-time" style={{ fontSize: '0.7rem', opacity: 0.8, paddingRight: '20px', flexShrink: 0 }}>
           {startTimeDisplay} - {endTimeDisplay}
         </div>
       )}
 
       {block.notes && (
-        <div className="tb-notes" style={{ fontSize: '0.8rem', opacity: 0.8, margin: '2px 8px', whiteSpace: 'pre-wrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div className="tb-notes" style={{ fontSize: '0.8rem', opacity: 0.8, margin: '2px 8px', whiteSpace: 'pre-wrap', overflow: 'hidden', textOverflow: 'ellipsis', minHeight: 0, flexShrink: 1 }}>
           {block.notes}
         </div>
       )}
