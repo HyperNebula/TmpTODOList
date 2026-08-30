@@ -26,12 +26,15 @@ interface TreeGridProps {
   visibleColumns: ColumnId[];
   columnWidths: Partial<Record<ColumnId, number>>;
   selectedTaskId: string | null;
+  multiSelectedIds: Set<string>;
   sortColumn: ColumnId | null;
   sortDirection: "asc" | "desc" | null;
-  onSelect: (id: string | null) => void;
+  onToggleSelection: (id: string, shift: boolean, ctrl: boolean) => void;
+  onClearSelection: () => void;
   onToggleDone: (id: string) => void;
   onToggleCollapsed: (id: string) => void;
   onUpdate: (id: string, updates: Partial<Task>) => void;
+  onUpdateTasks: (ids: string[], updates: Partial<Task>) => void;
   onToggleSort: (column: ColumnId) => void;
   onEditNotes: (task: Task) => void;
   onColumnResize: (column: ColumnId, width: number) => void;
@@ -68,12 +71,15 @@ export function TreeGrid({
   visibleColumns,
   columnWidths,
   selectedTaskId,
+  multiSelectedIds,
   sortColumn,
   sortDirection,
-  onSelect,
+  onToggleSelection,
+  onClearSelection,
   onToggleDone,
   onToggleCollapsed,
   onUpdate,
+  onUpdateTasks,
   onToggleSort,
   onEditNotes,
   onColumnResize,
@@ -250,42 +256,56 @@ export function TreeGrid({
   const commitEdit = useCallback(() => {
     if (!edit) return;
     const { taskId, column, value } = edit;
+    
+    // Determine if we are batch editing:
+    // If the currently edited task is part of a multi-selection, apply to all.
+    const isBatchEdit = multiSelectedIds.size > 1 && multiSelectedIds.has(taskId);
+    const targetIds = isBatchEdit ? Array.from(multiSelectedIds) : [taskId];
+
+    const applyUpdates = (updates: Partial<Task>) => {
+      if (isBatchEdit) {
+        onUpdateTasks(targetIds, updates);
+      } else {
+        onUpdate(taskId, updates);
+      }
+    };
+
     switch (column) {
       case "title":
-        onUpdate(taskId, { title: value });
+        applyUpdates({ title: value });
         break;
       case "dueDate":
-        onUpdate(taskId, { dueDate: value || null });
+        applyUpdates({ dueDate: value || null });
         break;
       case "priority": {
         const n = Math.min(10, Math.max(1, parseInt(value, 10) || 5));
-        onUpdate(taskId, { priority: n });
+        applyUpdates({ priority: n });
         break;
       }
       case "percentDone": {
         const n = Math.min(100, Math.max(0, parseInt(value, 10) || 0));
-        onUpdate(taskId, { percentDone: n });
+        applyUpdates({ percentDone: n });
         break;
       }
       case "timeEstimateMinutes":
-        onUpdate(taskId, { timeEstimateMinutes: parseMinutesInput(value) });
+        applyUpdates({ timeEstimateMinutes: parseMinutesInput(value) });
         break;
       case "fileLink":
-        onUpdate(taskId, { fileLink: value || null });
+        applyUpdates({ fileLink: value || null });
         break;
       case "category":
-        onUpdate(taskId, { category: value });
+        applyUpdates({ category: value });
         break;
       case "createdAt":
         if (value) {
-          onUpdate(taskId, { createdAt: value });
+          applyUpdates({ createdAt: value });
         }
         break;
       default:
         break;
     }
     setEdit(null);
-  }, [edit, onUpdate]);
+  }, [edit, multiSelectedIds, onUpdate, onUpdateTasks]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -373,7 +393,7 @@ export function TreeGrid({
 
   const renderCell = (row: FlatRow, column: ColumnId) => {
     const { task, depth, hasChildren } = row;
-    const isSelected = task.id === selectedTaskId;
+    const isSelected = multiSelectedIds.has(task.id);
     const doneClass = task.done ? "cell-done" : "";
 
     switch (column) {
@@ -383,7 +403,28 @@ export function TreeGrid({
             <input
               type="checkbox"
               checked={task.done}
-              onChange={() => onToggleDone(task.id)}
+              onChange={() => {
+                if (multiSelectedIds.size > 1 && multiSelectedIds.has(task.id)) {
+                  // If clicking a checkbox of a selected row, toggle all selected rows done/undone
+                  // Wait, actually `onToggleDone` toggles all if we map it to `store.toggleSelectedDone`
+                  // But `TreeGrid` gets `onToggleDone(id: string)`. We can just call it for the clicked id. 
+                  // Let's pass the logic into a new prop, or just map `onToggleDone` correctly in App.tsx. 
+                  // If we map `onToggleDone` in App to `toggleDone(id)`, it will only toggle one. 
+                  // If we want batch toggle, `TreeGrid` should tell `App` to toggle the batch.
+                  // Since `taskStore` has `toggleSelectedDone`, we can expose `onToggleSelectedDone` to `TreeGrid`.
+                  // Or we can just call `onToggleDone` for all `multiSelectedIds` here.
+                  // Let's call `onToggleDone` for all selected ids.
+                  if (multiSelectedIds.size > 1 && multiSelectedIds.has(task.id)) {
+                     const targetIds = Array.from(multiSelectedIds);
+                     const targetState = !task.done;
+                     onUpdateTasks(targetIds, { done: targetState, percentDone: targetState ? 100 : task.percentDone === 100 ? 0 : task.percentDone, completedAt: targetState ? new Date().toISOString() : null });
+                  } else {
+                     onToggleDone(task.id);
+                  }
+                } else {
+                  onToggleDone(task.id);
+                }
+              }}
               aria-label={`Mark ${task.title} done`}
             />
           </td>
@@ -543,13 +584,15 @@ export function TreeGrid({
     }
   };
 
-  const editMenuTask = editMenuTaskId
-    ? rows.find((r) => r.task.id === editMenuTaskId)?.task ?? null
-    : null;
+  const editMenuTasks = editMenuTaskId
+    ? (multiSelectedIds.has(editMenuTaskId) && multiSelectedIds.size > 1
+        ? rows.filter(r => multiSelectedIds.has(r.task.id)).map(r => r.task)
+        : [rows.find(r => r.task.id === editMenuTaskId)?.task].filter(Boolean) as Task[])
+    : [];
 
   return (
     <>
-      <div className="tree-grid-wrap" onClick={() => onSelect(null)}>
+      <div className="tree-grid-wrap" onClick={() => onClearSelection()}>
         <table className={`tree-grid ${showVerticalBorders ? "tree-grid-vertical-lines" : ""} ${!enableRowHover ? "disable-row-hover" : ""}`}>
           <thead>
             <tr>
@@ -585,7 +628,7 @@ export function TreeGrid({
                 <tr
                   key={row.task.id}
                   className={[
-                    row.task.id === selectedTaskId ? "row-selected" : "",
+                    multiSelectedIds.has(row.task.id) ? "row-selected" : "",
                     row.task.archived ? "row-archived" : "",
                     priorityColorStyle === "row" ? `priority-${row.task.priority}` : "",
                     rowDragClass(row),
@@ -593,7 +636,7 @@ export function TreeGrid({
                   draggable={!isFlatView}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onSelect(row.task.id === selectedTaskId ? null : row.task.id);
+                    onToggleSelection(row.task.id, e.shiftKey, e.metaKey || e.ctrlKey);
                   }}
                   onDragStart={(e) => handleDragStart(e, row.task.id)}
                   onDragEnd={handleDragEnd}
@@ -608,13 +651,13 @@ export function TreeGrid({
           </tbody>
         </table>
       </div>
-      {editMenuTask && (
+      {editMenuTasks.length > 0 && (
         <TaskEditMenu
-          task={editMenuTask}
+          tasks={editMenuTasks}
           visibleColumns={visibleColumns}
           onStartEdit={(column) => {
             setEditMenuTaskId(null);
-            startEdit(editMenuTask, column);
+            startEdit(editMenuTasks[0], column);
           }}
           onClose={() => setEditMenuTaskId(null)}
         />

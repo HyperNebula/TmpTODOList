@@ -130,6 +130,19 @@ function App() {
   }, [store]);
 
   const handleDelete = useCallback(() => {
+    if (store.multiSelectedIds.size > 1) {
+      setConfirmState({
+        title: "Delete Tasks",
+        message: `Delete ${store.multiSelectedIds.size} tasks?`,
+        confirmLabel: "Delete",
+        onConfirm: () => {
+          setConfirmState(null);
+          store.deleteSelectedTask();
+        },
+      });
+      return;
+    }
+
     if (!store.selectedTaskId) return;
     const task = store.file.tasks.find((t) => t.id === store.selectedTaskId);
     const hasChildren = store.file.tasks.some(
@@ -381,7 +394,7 @@ function App() {
           e.preventDefault();
           store.clearFilter();
         }
-      } else if (hotkeys.deleteTask && key === hotkeys.deleteTask.toLowerCase() && store.selectedTaskId) {
+      } else if (hotkeys.deleteTask && key === hotkeys.deleteTask.toLowerCase() && store.multiSelectedIds.size > 0) {
         handleDelete();
       }
     };
@@ -575,7 +588,7 @@ function App() {
               onImportCsv={handleImportCsv}
               onPrint={handlePrint}
               onArchive={() => store.archiveCompleted()}
-              hasSelection={!!store.selectedTaskId}
+              selectionCount={store.multiSelectedIds.size}
               dirty={store.dirty}
               onOpenSettings={() => setIsSettingsOpen(true)}
               isFocused={!!store.focusTaskId}
@@ -604,14 +617,17 @@ function App() {
               visibleColumns={visibleColumns}
               columnWidths={store.file.settings?.columnWidths ?? {}}
               selectedTaskId={store.selectedTaskId}
+              multiSelectedIds={store.multiSelectedIds}
               newlyCreatedTaskId={newlyCreatedTaskId}
               onEditStarted={() => setNewlyCreatedTaskId(null)}
               sortColumn={store.sort?.column ?? null}
               sortDirection={store.sort?.direction ?? null}
-              onSelect={store.setSelectedTaskId}
+              onToggleSelection={store.toggleTaskSelection}
+              onClearSelection={store.clearSelection}
               onToggleDone={store.toggleDone}
               onToggleCollapsed={store.toggleCollapsed}
               onUpdate={store.updateTask}
+              onUpdateTasks={store.updateTasks}
               onToggleSort={store.toggleSort}
               onEditNotes={setNotesTask}
               onColumnResize={store.setColumnWidth}

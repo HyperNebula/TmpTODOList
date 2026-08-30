@@ -43,6 +43,7 @@ interface TaskStore {
   filePath: string | null;
   dirty: boolean;
   selectedTaskId: string | null;
+  multiSelectedIds: Set<string>;
   sort: SortState | null;
   filter: FilterState;
   focusTaskId: string | null;
@@ -58,6 +59,9 @@ interface TaskStore {
   getSerialized: () => string;
 
   setSelectedTaskId: (id: string | null) => void;
+  toggleTaskSelection: (id: string, shift: boolean, ctrl: boolean) => void;
+  selectAllTasks: () => void;
+  clearSelection: () => void;
   addTask: (afterTaskId?: string | null) => string;
   addQuickTask: (title: string, parentId: string | null, priority?: number, timeEstimateMinutes?: number | null, notes?: string) => string;
   addSubTask: (parentId: string) => string;
@@ -68,6 +72,7 @@ interface TaskStore {
   toggleAllTasksFolded: () => void;
   duplicateSelectedTask: () => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
+  updateTasks: (taskIds: string[], updates: Partial<Task>) => void;
   archiveCompleted: () => void;
 
   moveTask: (draggedId: string, newParentId: string | null, newOrder: number) => void;
@@ -94,6 +99,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   filePath: null,
   dirty: false,
   selectedTaskId: null,
+  multiSelectedIds: new Set(),
   sort: null,
   filter: DEFAULT_FILTER,
   focusTaskId: null,
@@ -144,6 +150,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       filePath: null,
       dirty: false,
       selectedTaskId: null,
+      multiSelectedIds: new Set(),
       sort: null,
       filter: DEFAULT_FILTER,
       focusTaskId: null,
@@ -156,6 +163,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       filePath: path,
       dirty: false,
       selectedTaskId: null,
+      multiSelectedIds: new Set(),
       focusTaskId: null,
       sort: file.settings?.sort ?? null,
       filter: DEFAULT_FILTER,
@@ -182,7 +190,46 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     return result;
   },
 
-  setSelectedTaskId: (id) => set({ selectedTaskId: id }),
+  setSelectedTaskId: (id) => set({ selectedTaskId: id, multiSelectedIds: id ? new Set([id]) : new Set() }),
+
+  toggleTaskSelection: (id, shift, ctrl) => {
+    const { selectedTaskId, multiSelectedIds } = get();
+    if (shift && selectedTaskId) {
+      const rows = get().getFlatRows();
+      const startIdx = rows.findIndex(r => r.task.id === selectedTaskId);
+      const endIdx = rows.findIndex(r => r.task.id === id);
+      if (startIdx !== -1 && endIdx !== -1) {
+        const min = Math.min(startIdx, endIdx);
+        const max = Math.max(startIdx, endIdx);
+        const newSet = ctrl ? new Set(multiSelectedIds) : new Set<string>();
+        for (let i = min; i <= max; i++) {
+          newSet.add(rows[i].task.id);
+        }
+        set({ multiSelectedIds: newSet });
+        return;
+      }
+    }
+
+    if (ctrl) {
+      const newSet = new Set(multiSelectedIds);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      set({ multiSelectedIds: newSet, selectedTaskId: id });
+      return;
+    }
+
+    set({ selectedTaskId: id, multiSelectedIds: new Set([id]) });
+  },
+
+  selectAllTasks: () => {
+    const ids = get().getFlatRows().map(r => r.task.id);
+    set({ multiSelectedIds: new Set(ids) });
+  },
+
+  clearSelection: () => set({ selectedTaskId: null, multiSelectedIds: new Set() }),
 
   addTask: (afterTaskId) => {
     const selected = afterTaskId ?? get().selectedTaskId;
@@ -216,20 +263,37 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 
   deleteSelectedTask: () => {
-    const id = get().selectedTaskId;
-    if (!id) return;
-    const tasks = deleteTask(get().file.tasks, id, true);
+    const { multiSelectedIds, selectedTaskId } = get();
+    const ids = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds) : (selectedTaskId ? [selectedTaskId] : []);
+    if (ids.length === 0) return;
+    
+    let tasks = get().file.tasks;
+    for (const id of ids) {
+      tasks = deleteTask(tasks, id, true);
+    }
+    
     set((s) => ({
       file: touch({ ...s.file, tasks }),
       dirty: true,
       selectedTaskId: null,
+      multiSelectedIds: new Set(),
     }));
   },
 
   toggleSelectedDone: () => {
-    const id = get().selectedTaskId;
-    if (!id) return;
-    get().toggleDone(id);
+    const { multiSelectedIds, selectedTaskId } = get();
+    const ids = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds) : (selectedTaskId ? [selectedTaskId] : []);
+    if (ids.length === 0) return;
+    
+    let tasks = get().file.tasks;
+    for (const id of ids) {
+      tasks = toggleDone(tasks, id);
+    }
+    
+    set((s) => ({
+      file: touch({ ...s.file, tasks }),
+      dirty: true,
+    }));
   },
 
   toggleDone: (taskId) => {
@@ -270,18 +334,47 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 
   duplicateSelectedTask: () => {
-    const id = get().selectedTaskId;
-    if (!id) return;
-    const { tasks, newTaskId } = duplicateTask(get().file.tasks, id);
+    const { multiSelectedIds, selectedTaskId } = get();
+    const ids = multiSelectedIds.size > 0 ? Array.from(multiSelectedIds) : (selectedTaskId ? [selectedTaskId] : []);
+    if (ids.length === 0) return;
+
+    let tasks = get().file.tasks;
+    let lastNewTaskId = null;
+    
+    // Sort ids by order to maintain relative positions if they are siblings
+    const sortedIds = [...ids].sort((a, b) => {
+      const ta = tasks.find(t => t.id === a);
+      const tb = tasks.find(t => t.id === b);
+      return (ta?.order || 0) - (tb?.order || 0);
+    });
+
+    for (const id of sortedIds) {
+      const res = duplicateTask(tasks, id);
+      tasks = res.tasks;
+      lastNewTaskId = res.newTaskId;
+    }
+
     set((s) => ({
       file: touch({ ...s.file, tasks }),
       dirty: true,
-      selectedTaskId: newTaskId,
+      selectedTaskId: lastNewTaskId,
+      multiSelectedIds: lastNewTaskId ? new Set([lastNewTaskId]) : new Set(),
     }));
   },
 
   updateTask: (taskId, updates) => {
     const tasks = updateTask(get().file.tasks, taskId, updates);
+    set((s) => ({
+      file: touch({ ...s.file, tasks }),
+      dirty: true,
+    }));
+  },
+
+  updateTasks: (taskIds, updates) => {
+    let tasks = get().file.tasks;
+    for (const id of taskIds) {
+      tasks = updateTask(tasks, id, updates);
+    }
     set((s) => ({
       file: touch({ ...s.file, tasks }),
       dirty: true,

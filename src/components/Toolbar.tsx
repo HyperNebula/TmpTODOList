@@ -11,7 +11,7 @@ interface ToolbarProps {
   onImportCsv: () => void;
   onPrint: () => void;
   onArchive: () => void;
-  hasSelection: boolean;
+  selectionCount: number;
   dirty: boolean;
   onOpenSettings: () => void;
   isFocused: boolean;
@@ -36,7 +36,7 @@ export function Toolbar({
   onImportCsv,
   onPrint,
   onArchive,
-  hasSelection,
+  selectionCount,
   dirty,
   onOpenSettings,
   isFocused,
@@ -59,7 +59,7 @@ export function Toolbar({
         type="button"
         className="btn"
         onClick={onNewSubTask}
-        disabled={!hasSelection}
+        disabled={selectionCount !== 1}
       >
         Sub-task
       </button>
@@ -67,7 +67,7 @@ export function Toolbar({
         type="button"
         className="btn btn-danger"
         onClick={onDelete}
-        disabled={!hasSelection}
+        disabled={selectionCount === 0}
       >
         Delete
       </button>
@@ -77,7 +77,7 @@ export function Toolbar({
           type="button"
           className="btn"
           onClick={onFocusTask}
-          disabled={!hasSelection}
+          disabled={selectionCount === 0}
           title="Focus on selected task and sub-tasks"
         >
           Focus

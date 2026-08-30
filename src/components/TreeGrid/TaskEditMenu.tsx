@@ -13,14 +13,14 @@ const EDITABLE_FIELDS: { column: ColumnId; label: string }[] = [
 ];
 
 interface TaskEditMenuProps {
-  task: Task;
+  tasks: Task[];
   visibleColumns: ColumnId[];
   onStartEdit: (column: ColumnId) => void;
   onClose: () => void;
 }
 
 export function TaskEditMenu({
-  task,
+  tasks,
   visibleColumns,
   onStartEdit,
   onClose,
@@ -57,6 +57,14 @@ export function TaskEditMenu({
   }, [focusedIndex, visibleFields, onStartEdit, onClose]);
 
   function getFieldPreview(column: ColumnId): string {
+    if (tasks.length === 0) return "";
+    const firstTask = tasks[0];
+    
+    // Check if all selected tasks have the same value for this column
+    const allSame = tasks.every((t) => t[column] === firstTask[column]);
+    if (!allSame) return "Multiple values";
+
+    const task = firstTask;
     switch (column) {
       case "title": return task.title;
       case "dueDate": return task.dueDate ?? "—";
@@ -75,6 +83,8 @@ export function TaskEditMenu({
     }
   }
 
+  const headerTitle = tasks.length === 1 ? tasks[0].title : `Batch Edit (${tasks.length} tasks)`;
+
   return (
     <div
       className="task-edit-menu-overlay"
@@ -84,7 +94,7 @@ export function TaskEditMenu({
     >
       <div className="task-edit-menu" ref={menuRef} tabIndex={-1}>
         <div className="task-edit-menu-header">
-          <span className="task-edit-menu-title">{task.title}</span>
+          <span className="task-edit-menu-title">{headerTitle}</span>
           <span className="task-edit-menu-hint">↑↓ Navigate · Enter Edit · Esc Close</span>
         </div>
         <ul className="task-edit-menu-list">
