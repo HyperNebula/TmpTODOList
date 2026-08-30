@@ -403,17 +403,9 @@ export function TreeGrid({
             <input
               type="checkbox"
               checked={task.done}
+              onClick={(e) => e.stopPropagation()}
               onChange={() => {
                 if (multiSelectedIds.size > 1 && multiSelectedIds.has(task.id)) {
-                  // If clicking a checkbox of a selected row, toggle all selected rows done/undone
-                  // Wait, actually `onToggleDone` toggles all if we map it to `store.toggleSelectedDone`
-                  // But `TreeGrid` gets `onToggleDone(id: string)`. We can just call it for the clicked id. 
-                  // Let's pass the logic into a new prop, or just map `onToggleDone` correctly in App.tsx. 
-                  // If we map `onToggleDone` in App to `toggleDone(id)`, it will only toggle one. 
-                  // If we want batch toggle, `TreeGrid` should tell `App` to toggle the batch.
-                  // Since `taskStore` has `toggleSelectedDone`, we can expose `onToggleSelectedDone` to `TreeGrid`.
-                  // Or we can just call `onToggleDone` for all `multiSelectedIds` here.
-                  // Let's call `onToggleDone` for all selected ids.
                   if (multiSelectedIds.size > 1 && multiSelectedIds.has(task.id)) {
                      const targetIds = Array.from(multiSelectedIds);
                      const targetState = !task.done;
@@ -435,6 +427,7 @@ export function TreeGrid({
             <input
               type="checkbox"
               checked={task.isProject || false}
+              onClick={(e) => e.stopPropagation()}
               onChange={() => onUpdate(task.id, { isProject: !task.isProject })}
               aria-label={`Mark ${task.title} as project`}
             />
@@ -468,6 +461,7 @@ export function TreeGrid({
                   className="inline-edit"
                   value={edit.value}
                   autoFocus
+                  onClick={(e) => e.stopPropagation()}
                   onChange={(e) =>
                     setEdit({ ...edit, value: e.target.value })
                   }
@@ -519,6 +513,7 @@ export function TreeGrid({
           type={inputType}
           value={edit.value}
           autoFocus
+          onClick={(e) => e.stopPropagation()}
           min={column === "priority" ? 1 : column === "percentDone" ? 0 : undefined}
           max={column === "priority" ? 10 : column === "percentDone" ? 100 : undefined}
           onChange={(e) => setEdit({ ...edit, value: e.target.value })}
