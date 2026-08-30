@@ -97,7 +97,7 @@
 .tree-grid tbody tr td.priority-9 { background-color: color-mix(in srgb, var(--priority-color-9, rgb(59, 130, 246)) 15%, transparent); color: var(--priority-color-9, rgb(59, 130, 246)); font-weight: 600; }
 .tree-grid tbody tr td.priority-10 { background-color: color-mix(in srgb, var(--priority-color-10, rgb(168, 85, 247)) 15%, transparent); color: var(--priority-color-10, rgb(168, 85, 247)); font-weight: 600; }
 
-.tree-grid:not(.disable-row-hover) tr:hover td {
+.tree-grid:not(.disable-row-hover) tr:not(.row-selected):hover td {
   background-color: var(--row-hover) !important;
 }
 
