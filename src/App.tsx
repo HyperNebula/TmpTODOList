@@ -448,6 +448,8 @@ function App() {
           };
 
           if (dirtyRef.current) {
+            await win.unminimize();
+            await win.setFocus();
             setConfirmState({
               title: "Save changes?",
               message: "You have unsaved changes. Save before closing?",
