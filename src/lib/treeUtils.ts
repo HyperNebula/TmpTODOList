@@ -104,6 +104,7 @@ export function addQuickTask(
   parentId: string | null,
   priority?: number,
   timeEstimateMinutes?: number | null,
+  notes?: string,
 ): { tasks: Task[]; newTaskId: string } {
   const order = nextSiblingOrder(tasks, parentId);
   const parent = parentId ? getTaskById(tasks, parentId) : undefined;
@@ -114,6 +115,7 @@ export function addQuickTask(
     order,
     ...(priority !== undefined ? { priority } : {}),
     ...(timeEstimateMinutes !== undefined ? { timeEstimateMinutes } : {}),
+    ...(notes !== undefined ? { notes } : {}),
     ...(parent?.category ? { category: parent.category } : {}),
   });
 

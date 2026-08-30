@@ -15,6 +15,7 @@ export function QuickAddDialog({ onClose }: QuickAddDialogProps) {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<number>(5);
   const [timeEstimate, setTimeEstimate] = useState<string>("");
+  const [notes, setNotes] = useState("");
   const [projectSearch, setProjectSearch] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -59,7 +60,7 @@ export function QuickAddDialog({ onClose }: QuickAddDialogProps) {
   const handleConfirm = () => {
     if (title.trim() && selectedProjectId) {
       const mins = parseInt(timeEstimate, 10);
-      store.addQuickTask(title.trim(), selectedProjectId, priority, isNaN(mins) ? null : mins);
+      store.addQuickTask(title.trim(), selectedProjectId, priority, isNaN(mins) ? null : mins, notes.trim() || undefined);
       onClose();
     }
   };
@@ -162,6 +163,25 @@ export function QuickAddDialog({ onClose }: QuickAddDialogProps) {
               />
             </label>
           </div>
+          
+          <label style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <span style={{ fontSize: "14px", fontWeight: 500 }}>Notes (Optional)</span>
+            <textarea
+              className="inline-edit"
+              style={{ padding: "8px", boxSizing: "border-box", resize: "vertical", minHeight: "60px", fontFamily: "inherit" }}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add a note..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  handleConfirm();
+                } else if (e.key === "Escape") {
+                  onClose();
+                }
+              }}
+            />
+          </label>
 
           <label style={{ display: "flex", flexDirection: "column", gap: "4px", position: "relative" }} ref={dropdownRef}>
             <span style={{ fontSize: "14px", fontWeight: 500 }}>Project</span>
