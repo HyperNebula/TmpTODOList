@@ -206,7 +206,7 @@ export function TimeGrid({
       const task = tasks.find((t) => t.id === taskId);
       const dur = task?.timeEstimateMinutes ?? 60;
       const endMin = dropMin + dur;
-      const color = task ? getPriorityColor(task.priority) : getNextColor();
+      const color = task && task.priority !== null ? getPriorityColor(task.priority) : getNextColor();
       const newId = await onAddTimeblock(makeIso(isoDate, dropMin), makeIso(isoDate, endMin), task?.title, color);
       onAssignTask(newId, taskId);
     }

@@ -18,7 +18,6 @@ export function getNextColor(): string {
 }
 
 export function getPriorityColor(priority: number | null): string {
-  if (priority === null) return "#94a3b8"; // Slate 400 for null priority
   const colors: Record<number, string> = {
     1: "#ef4444",
     2: "#f97316",

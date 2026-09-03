@@ -59,7 +59,7 @@ export function TaskDrawer({ tasks, onClose }: TaskDrawerProps) {
           >
             <span 
               className="task-drawer-item-indicator" 
-              style={task.done ? undefined : { backgroundColor: getPriorityColor(task.priority) }}
+              style={task.done ? undefined : (task.priority !== null ? { backgroundColor: getPriorityColor(task.priority) } : undefined)}
             />
             <span className="task-drawer-item-title">{task.title || "(untitled)"}</span>
             {task.timeEstimateMinutes != null && (
