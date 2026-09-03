@@ -208,14 +208,16 @@ export function TimeblockBlock({
           ✎
         </button>
       )}
-      <button
-        className="tb-complete-toggle"
-        onClick={(e) => { e.stopPropagation(); onToggleComplete(block.id, !block.completed); }}
-        title={block.completed ? "Mark Incomplete" : "Mark Complete"}
-        style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: 'inherit', opacity: 0.8, borderRadius: '4px' }}
-      >
-        {block.completed ? "☑" : "☐"}
-      </button>
+      {assignedTasks.length > 0 && (
+        <button
+          className="tb-complete-toggle"
+          onClick={(e) => { e.stopPropagation(); onToggleComplete(block.id, !block.completed); }}
+          title={block.completed ? "Mark Incomplete" : "Mark Complete"}
+          style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: 'inherit', opacity: 0.8, borderRadius: '4px' }}
+        >
+          {block.completed ? "☑" : "☐"}
+        </button>
+      )}
 
       {block.title && <div className="tb-title" style={{ paddingRight: '20px' }}>{block.title}</div>}
 
