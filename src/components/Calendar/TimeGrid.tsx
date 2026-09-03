@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import type { Task, Timeblock } from "../../types/task";
 import { TimeblockBlock } from "./TimeblockBlock";
 import { getNextColor, getPriorityColor } from "./colors";
@@ -14,7 +14,7 @@ interface TimeGridProps {
   today: string;
   timeblocks: Timeblock[];
   tasks: Task[];
-  onAddTimeblock: (startTime: string, endTime: string, title?: string, color?: string) => Promise<string>;
+  onAddTimeblock: (startTime: string, endTime: string, title?: string, color?: string, recurrenceRule?: string, link?: string) => Promise<string>;
   onUpdateTimeblock: (id: string, updates: Partial<Omit<Timeblock, "id">>) => void;
   onAssignTask: (blockId: string, taskId: string) => void;
   onEditTimeblock: (id: string, isNew?: boolean) => void;
@@ -142,6 +142,19 @@ export function TimeGrid({
   const totalHours = calendarEndHour - calendarStartHour;
   const gridHeight = totalHours * 60 * pxPerMin;
 
+  const [currentTimeMin, setCurrentTimeMin] = useState(() => {
+    const d = new Date();
+    return d.getHours() * 60 + d.getMinutes();
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const d = new Date();
+      setCurrentTimeMin(d.getHours() * 60 + d.getMinutes());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   /** Sync header horizontal scroll with body scroll */
   function handleWrapperScroll() {
     if (wrapperRef.current && headerColsRef.current) {
@@ -207,7 +220,7 @@ export function TimeGrid({
       const dur = task?.timeEstimateMinutes ?? 60;
       const endMin = dropMin + dur;
       const color = task && task.priority !== null ? getPriorityColor(task.priority) : getNextColor();
-      const newId = await onAddTimeblock(makeIso(isoDate, dropMin), makeIso(isoDate, endMin), task?.title, color);
+      const newId = await onAddTimeblock(makeIso(isoDate, dropMin), makeIso(isoDate, endMin), task?.title, color, undefined, task?.fileLink ?? undefined);
       onAssignTask(newId, taskId);
     }
   }
@@ -294,6 +307,14 @@ export function TimeGrid({
                       style={{ top: (h - calendarStartHour) * 60 * pxPerMin }}
                     />
                   ))}
+
+                  {/* Current Time Line */}
+                  {isoDate === today && currentTimeMin >= gridStartMin && currentTimeMin <= gridStartMin + totalHours * 60 && (
+                    <div 
+                      className="time-grid-current-time-line"
+                      style={{ top: (currentTimeMin - gridStartMin) * pxPerMin }}
+                    />
+                  )}
 
                   {/* Timeblock cards */}
                   {blocksForDate.map((block) => {

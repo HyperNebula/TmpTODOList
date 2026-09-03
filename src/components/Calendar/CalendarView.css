@@ -495,3 +495,14 @@
   border-radius: 2px;
   background: rgba(255,255,255,0.5);
 }
+
+/* ── Current Time Line ────────────────────────────────────── */
+.time-grid-current-time-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px dashed #ff4757;
+  z-index: 4;
+  pointer-events: none;
+}

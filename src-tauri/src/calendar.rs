@@ -28,6 +28,7 @@ pub struct TimeblockRow {
     pub recurrence_id: Option<String>,
     pub original_start: Option<String>,
     pub is_deleted: bool,
+    pub link: Option<String>,
     pub task_ids: Vec<String>,
 }
 
@@ -54,6 +55,7 @@ pub fn open_calendar_db(
             notes       TEXT DEFAULT '',
             completed   INTEGER DEFAULT 0,
             color       TEXT,
+            link        TEXT,
             recurrence_rule TEXT,
             recurrence_id   TEXT,
             original_start  TEXT,
@@ -74,6 +76,9 @@ pub fn open_calendar_db(
     )
     .map_err(|e| e.to_string())?;
 
+    // Add link column for existing databases (fails silently if already exists)
+    let _ = conn.execute("ALTER TABLE timeblocks ADD COLUMN link TEXT;", []);
+
     *state.conn.lock().unwrap() = Some(conn);
     Ok(())
 }
@@ -93,7 +98,7 @@ pub fn get_timeblocks_for_range(
     let lock = state.conn.lock().unwrap();
     let conn = lock.as_ref().ok_or("No calendar database is open")?;
 
-    let mut stmt = conn.prepare("SELECT id, title, start_time, end_time, notes, completed, color, recurrence_rule, recurrence_id, original_start, is_deleted FROM timeblocks WHERE start_time < ? AND end_time > ? AND is_deleted = 0").map_err(|e| e.to_string())?;
+    let mut stmt = conn.prepare("SELECT id, title, start_time, end_time, notes, completed, color, recurrence_rule, recurrence_id, original_start, is_deleted, link FROM timeblocks WHERE start_time < ? AND end_time > ? AND is_deleted = 0").map_err(|e| e.to_string())?;
     let block_iter = stmt
         .query_map([&end, &start], |row| {
             let completed: i32 = row.get(5)?;
@@ -110,6 +115,7 @@ pub fn get_timeblocks_for_range(
                 recurrence_id: row.get(8)?,
                 original_start: row.get(9)?,
                 is_deleted: is_deleted > 0,
+                link: row.get(11)?,
                 task_ids: Vec::new(),
             })
         })
@@ -142,7 +148,7 @@ pub fn get_recurring_timeblocks(state: tauri::State<'_, CalendarDb>) -> Result<S
     let conn = lock.as_ref().ok_or("No calendar database is open")?;
 
     // Fetch parent recurring blocks and all exceptions
-    let mut stmt = conn.prepare("SELECT id, title, start_time, end_time, notes, completed, color, recurrence_rule, recurrence_id, original_start, is_deleted FROM timeblocks WHERE recurrence_rule IS NOT NULL OR recurrence_id IS NOT NULL").map_err(|e| e.to_string())?;
+    let mut stmt = conn.prepare("SELECT id, title, start_time, end_time, notes, completed, color, recurrence_rule, recurrence_id, original_start, is_deleted, link FROM timeblocks WHERE recurrence_rule IS NOT NULL OR recurrence_id IS NOT NULL").map_err(|e| e.to_string())?;
     let block_iter = stmt
         .query_map([], |row| {
             let completed: i32 = row.get(5)?;
@@ -159,6 +165,7 @@ pub fn get_recurring_timeblocks(state: tauri::State<'_, CalendarDb>) -> Result<S
                 recurrence_id: row.get(8)?,
                 original_start: row.get(9)?,
                 is_deleted: is_deleted > 0,
+                link: row.get(11)?,
                 task_ids: Vec::new(),
             })
         })
@@ -194,6 +201,7 @@ pub fn add_timeblock(
     end_time: String,
     notes: String,
     color: Option<String>,
+    link: Option<String>,
     recurrence_rule: Option<String>,
     recurrence_id: Option<String>,
     original_start: Option<String>,
@@ -202,8 +210,8 @@ pub fn add_timeblock(
     let conn = lock.as_ref().ok_or("No calendar database is open")?;
 
     conn.execute(
-        "INSERT INTO timeblocks (id, title, start_time, end_time, notes, color, recurrence_rule, recurrence_id, original_start) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-        rusqlite::params![id, title, start_time, end_time, notes, color, recurrence_rule, recurrence_id, original_start],
+        "INSERT INTO timeblocks (id, title, start_time, end_time, notes, color, link, recurrence_rule, recurrence_id, original_start) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+        rusqlite::params![id, title, start_time, end_time, notes, color, link, recurrence_rule, recurrence_id, original_start],
     ).map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -261,6 +269,15 @@ pub fn update_timeblock(
             sets.push("color = NULL".to_string());
         } else if let Some(s) = col.as_str() {
             sets.push(format!("color = ?{}", param_idx));
+            params.push(Box::new(s.to_string()));
+            param_idx += 1;
+        }
+    }
+    if let Some(lnk) = obj.get("link") {
+        if lnk.is_null() {
+            sets.push("link = NULL".to_string());
+        } else if let Some(s) = lnk.as_str() {
+            sets.push(format!("link = ?{}", param_idx));
             params.push(Box::new(s.to_string()));
             param_idx += 1;
         }

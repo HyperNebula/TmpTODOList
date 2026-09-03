@@ -7,23 +7,161 @@ interface TaskDrawerProps {
   onClose: () => void;
 }
 
+type FilterMode = "all" | "today" | "next_week";
+
+interface TreeNode {
+  task: Task;
+  children: TreeNode[];
+}
+
 /**
  * A slide-in sidebar showing all non-archived tasks.
  * Tasks are draggable onto the calendar time grid to create timeblocks.
  */
 export function TaskDrawer({ tasks, onClose }: TaskDrawerProps) {
   const [search, setSearch] = useState("");
+  const [filterMode, setFilterMode] = useState<FilterMode>("all");
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
 
-  const filtered = tasks.filter(
-    (t) =>
-      !t.archived &&
-      (search === "" ||
-        t.title.toLowerCase().includes(search.toLowerCase()))
-  );
+  // Date utilities for filtering
+  const toIsoDate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  
+  const todayIso = toIsoDate(new Date());
+  
+  const getNextWeekIso = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return toIsoDate(d);
+  };
+  const nextWeekIso = getNextWeekIso();
+
+  // Basic filtering first
+  const baseFiltered = tasks.filter((t) => {
+    if (t.archived) return false;
+    
+    // Text search
+    if (search !== "" && !t.title.toLowerCase().includes(search.toLowerCase())) {
+      return false;
+    }
+
+    // Date filtering
+    if (filterMode === "today") {
+      if (!t.dueDate || t.dueDate !== todayIso) return false;
+    } else if (filterMode === "next_week") {
+      if (!t.dueDate || t.dueDate < todayIso || t.dueDate > nextWeekIso) return false;
+    }
+
+    return true;
+  });
+
+  // Since we want to preserve hierarchy, if a child matches, we should ideally include its parents.
+  const includedIds = new Set(baseFiltered.map(t => t.id));
+  
+  // Make sure parents of included items are also included
+  let addedNew = true;
+  while (addedNew) {
+    addedNew = false;
+    for (const id of Array.from(includedIds)) {
+      const task = tasks.find(t => t.id === id);
+      if (task && task.parentId && !includedIds.has(task.parentId)) {
+        includedIds.add(task.parentId);
+        addedNew = true;
+      }
+    }
+  }
+
+  // Build tree
+  const treeNodes = new Map<string, TreeNode>();
+  const rootNodes: TreeNode[] = [];
+
+  // Initialize nodes for all included tasks
+  for (const t of tasks) {
+    if (includedIds.has(t.id)) {
+      treeNodes.set(t.id, { task: t, children: [] });
+    }
+  }
+
+  // Assign children to parents
+  for (const node of Array.from(treeNodes.values())) {
+    const parentId = node.task.parentId;
+    if (parentId && treeNodes.has(parentId)) {
+      treeNodes.get(parentId)!.children.push(node);
+    } else {
+      rootNodes.push(node);
+    }
+  }
+
+  // Sort nodes
+  const sortNodes = (nodes: TreeNode[]) => {
+    nodes.sort((a, b) => a.task.order - b.task.order);
+    for (const n of nodes) {
+      sortNodes(n.children);
+    }
+  };
+  sortNodes(rootNodes);
 
   function handleDragStart(e: React.DragEvent, taskId: string) {
     e.dataTransfer.setData("text/plain", taskId);
     e.dataTransfer.effectAllowed = "copy";
+  }
+
+  function toggleCollapse(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    setCollapsedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function renderTree(nodes: TreeNode[], depth = 0) {
+    return nodes.map(node => {
+      const t = node.task;
+      const isCollapsed = collapsedIds.has(t.id);
+      const hasChildren = node.children.length > 0;
+
+      return (
+        <li key={t.id} className="task-drawer-item-container" style={{ marginLeft: depth > 0 ? "16px" : "0", listStyle: "none" }}>
+          <div
+            className={`task-drawer-item${t.done ? " task-drawer-item--done" : ""}`}
+            draggable
+            onDragStart={(e) => handleDragStart(e, t.id)}
+            title={t.title}
+            style={{ display: 'flex', alignItems: 'center' }}
+          >
+            {hasChildren ? (
+              <span 
+                className="task-drawer-item-toggle" 
+                onClick={(e) => toggleCollapse(e, t.id)}
+                style={{ cursor: "pointer", marginRight: "4px", fontSize: "0.8em", width: "12px", display: "inline-block", textAlign: "center" }}
+              >
+                {isCollapsed ? "▶" : "▼"}
+              </span>
+            ) : (
+              <span style={{ marginRight: "4px", width: "12px", display: "inline-block" }}></span>
+            )}
+            
+            <span 
+              className="task-drawer-item-indicator" 
+              style={t.done ? undefined : (t.priority !== null ? { backgroundColor: getPriorityColor(t.priority) } : undefined)}
+            />
+            <span className="task-drawer-item-title">{t.title || "(untitled)"}</span>
+            {t.timeEstimateMinutes != null && (
+              <span className="task-drawer-item-est">
+                {t.timeEstimateMinutes}m
+              </span>
+            )}
+          </div>
+          {!isCollapsed && hasChildren && (
+            <ul className="task-drawer-list" style={{ marginTop: "4px", marginBottom: "4px", paddingLeft: 0 }}>
+              {renderTree(node.children, depth + 1)}
+            </ul>
+          )}
+        </li>
+      );
+    });
   }
 
   return (
@@ -43,32 +181,36 @@ export function TaskDrawer({ tasks, onClose }: TaskDrawerProps) {
           onChange={(e) => setSearch(e.target.value)}
           className="task-drawer-search-input"
         />
+        <div className="task-drawer-filters" style={{ display: "flex", gap: "4px", marginTop: "8px" }}>
+          <button 
+            className={`btn ${filterMode === "all" ? "active" : ""}`} 
+            onClick={() => setFilterMode("all")}
+            style={{ flex: 1, fontSize: "0.75rem", padding: "4px" }}
+          >
+            All
+          </button>
+          <button 
+            className={`btn ${filterMode === "today" ? "active" : ""}`} 
+            onClick={() => setFilterMode("today")}
+            style={{ flex: 1, fontSize: "0.75rem", padding: "4px" }}
+          >
+            Today
+          </button>
+          <button 
+            className={`btn ${filterMode === "next_week" ? "active" : ""}`} 
+            onClick={() => setFilterMode("next_week")}
+            style={{ flex: 1, fontSize: "0.75rem", padding: "4px" }}
+          >
+            Next 7 Days
+          </button>
+        </div>
       </div>
 
-      <ul className="task-drawer-list">
-        {filtered.length === 0 && (
-          <li className="task-drawer-empty">No tasks found.</li>
+      <ul className="task-drawer-list" style={{ paddingLeft: 0 }}>
+        {rootNodes.length === 0 && (
+          <li className="task-drawer-empty" style={{ listStyle: "none" }}>No tasks found.</li>
         )}
-        {filtered.map((task) => (
-          <li
-            key={task.id}
-            className={`task-drawer-item${task.done ? " task-drawer-item--done" : ""}`}
-            draggable
-            onDragStart={(e) => handleDragStart(e, task.id)}
-            title={task.title}
-          >
-            <span 
-              className="task-drawer-item-indicator" 
-              style={task.done ? undefined : (task.priority !== null ? { backgroundColor: getPriorityColor(task.priority) } : undefined)}
-            />
-            <span className="task-drawer-item-title">{task.title || "(untitled)"}</span>
-            {task.timeEstimateMinutes != null && (
-              <span className="task-drawer-item-est">
-                {task.timeEstimateMinutes}m
-              </span>
-            )}
-          </li>
-        ))}
+        {renderTree(rootNodes)}
       </ul>
     </div>
   );

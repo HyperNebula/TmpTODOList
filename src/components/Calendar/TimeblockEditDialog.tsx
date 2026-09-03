@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { Timeblock, Task } from "../../types/task";
 import { RRule, rrulestr } from "rrule";
+import { openFileLink } from "../../lib/fileApi";
 import "./TimeblockEditDialog.css";
 
 interface Props {
@@ -19,6 +20,7 @@ export function TimeblockEditDialog({ block, isNew, tasks, onSave, onClose, onRe
   const [title, setTitle] = useState(block.title || "");
   const [notes, setNotes] = useState(block.notes || "");
   const [color, setColor] = useState(block.color || "");
+  const [link, setLink] = useState(block.link || "");
   
   const [startTimeStr, setStartTimeStr] = useState(() => {
     const d = new Date(block.startTime);
@@ -54,7 +56,7 @@ export function TimeblockEditDialog({ block, isNew, tasks, onSave, onClose, onRe
   }, [block.recurrenceRule]);
 
   const handleSave = () => {
-    const updates: Partial<Timeblock> = { title, notes, color: color || undefined };
+    const updates: Partial<Timeblock> = { title, notes, color: color || undefined, link: link || null };
     
     const startD = new Date(block.startTime);
     const [sh, sm] = startTimeStr.split(":").map(Number);
@@ -194,6 +196,21 @@ export function TimeblockEditDialog({ block, isNew, tasks, onSave, onClose, onRe
           <div className="timeblock-edit-group">
             <label>Notes</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add any notes here..." />
+          </div>
+
+          <div className="timeblock-edit-group">
+            <label>Link</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input type="text" value={link} onChange={e => setLink(e.target.value)} placeholder="File path or URL..." style={{ flex: 1 }} />
+              <button 
+                type="button" 
+                className="btn" 
+                onClick={() => link && openFileLink(link).catch(console.error)}
+                disabled={!link}
+              >
+                Open Link
+              </button>
+            </div>
           </div>
 
           <div className="timeblock-edit-group">

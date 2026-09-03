@@ -17,7 +17,7 @@ interface CalendarStore {
   closeDb: () => Promise<void>;
   loadRange: (start: string, end: string) => Promise<void>;
 
-  addTimeblock: (startTime: string, endTime: string, title?: string, color?: string, recurrenceRule?: string) => Promise<string>;
+  addTimeblock: (startTime: string, endTime: string, title?: string, color?: string, recurrenceRule?: string, link?: string) => Promise<string>;
   updateTimeblock: (id: string, updates: Partial<Omit<Timeblock, "id">>) => Promise<void>;
   deleteTimeblock: (id: string) => Promise<void>;
   createException: (parentId: string, originalStart: string, newBlockData: Timeblock) => Promise<void>;
@@ -65,6 +65,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         notes: row.notes,
         completed: row.completed,
         color: row.color,
+        link: row.link,
         taskIds: row.task_ids,
         recurrenceRule: row.recurrence_rule,
         recurrenceId: row.recurrence_id,
@@ -84,6 +85,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
       notes: row.notes,
       completed: row.completed,
       color: row.color,
+      link: row.link,
       taskIds: row.task_ids,
       recurrenceRule: row.recurrence_rule,
       recurrenceId: row.recurrence_id,
@@ -170,7 +172,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     set({ timeblocks: visibleBlocks });
   },
 
-  addTimeblock: async (startTime: string, endTime: string, title?: string, color?: string, recurrenceRule?: string) => {
+  addTimeblock: async (startTime: string, endTime: string, title?: string, color?: string, recurrenceRule?: string, link?: string) => {
     const id = crypto.randomUUID();
     // We can do an optimistic insert for responsiveness, but then we'll reload.
     const newBlock: Timeblock = {
@@ -181,6 +183,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
       notes: "",
       completed: false,
       color: color || undefined,
+      link: link || undefined,
       taskIds: [],
       recurrenceRule,
     };
@@ -197,6 +200,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         endTime,
         notes: "",
         color: color || null,
+        link: link || null,
         recurrenceRule: recurrenceRule || null,
         recurrenceId: null,
         originalStart: null,
@@ -225,6 +229,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         else if (k === "endTime") backendUpdates["end_time"] = v;
         else if (k === "recurrenceRule") backendUpdates["recurrence_rule"] = v === null ? null : v;
         else if (k === "isDeleted") backendUpdates["is_deleted"] = v;
+        else if (k === "link") backendUpdates["link"] = v === null ? null : v;
         else backendUpdates[k] = v;
       }
       await invoke("update_timeblock", { id, updatesJson: JSON.stringify(backendUpdates) });
@@ -275,6 +280,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         endTime: newBlockData.endTime,
         notes: newBlockData.notes || "",
         color: newBlockData.color || null,
+        link: newBlockData.link || null,
         recurrenceRule: null,
         recurrenceId: parentId,
         originalStart: originalStart,
@@ -331,6 +337,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         endTime: splitBlock.endTime,
         notes: splitBlock.notes || "",
         color: splitBlock.color || null,
+        link: splitBlock.link || null,
         recurrenceRule: splitBlock.recurrenceRule || null,
         recurrenceId: null,
         originalStart: null,
@@ -368,6 +375,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         endTime: originalStart,
         notes: "",
         color: null,
+        link: null,
         recurrenceRule: null,
         recurrenceId: parentId,
         originalStart: originalStart,

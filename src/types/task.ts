@@ -50,6 +50,7 @@ export interface Timeblock {
   notes?: string;
   completed?: boolean;
   color?: string;
+  link?: string | null;
   recurrenceRule?: string;
   recurrenceId?: string;
   originalStart?: string;
