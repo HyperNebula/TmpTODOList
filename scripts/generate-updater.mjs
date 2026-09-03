@@ -62,9 +62,18 @@ function generateUpdater(isPlus) {
         };
     }
     
+    let notes = "Bug fixes and improvements.";
+    try {
+        if (fs.existsSync('release_notes.txt')) {
+            notes = fs.readFileSync('release_notes.txt', 'utf8').trim();
+        }
+    } catch (e) {
+        console.warn("Could not read release_notes.txt, falling back to default notes");
+    }
+
     const updater = {
         version: VERSION,
-        notes: "Bug fixes and improvements.",
+        notes: notes,
         pub_date: new Date().toISOString(),
         platforms
     };

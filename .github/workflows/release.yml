@@ -90,6 +90,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Generate release notes
+        run: git log -1 --pretty=%B > release_notes.txt
+
       - name: Get version
         id: version
         shell: bash
