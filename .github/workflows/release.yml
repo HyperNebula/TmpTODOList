@@ -91,7 +91,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Generate release notes
-        run: git log -1 --pretty=%B > release_notes.txt
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            jq -r '.commits[]?.message | split("\n")[0] | "- " + .' "$GITHUB_EVENT_PATH" > release_notes.txt
+            if [ ! -s release_notes.txt ]; then
+              git log -1 --pretty=format:"- %s" > release_notes.txt
+            fi
+          else
+            git log -1 --pretty=format:"- %s" > release_notes.txt
+          fi
 
       - name: Get version
         id: version
