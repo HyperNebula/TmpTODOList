@@ -164,13 +164,15 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  width: 100%;
 }
 
 .file-link-text {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 80px;
 }
 
 .link-open-btn,
@@ -182,6 +184,7 @@
   font-size: 11px;
   cursor: pointer;
   color: var(--accent);
+  flex-shrink: 0;
 }
 
 .link-open-btn:hover,
