@@ -68,7 +68,7 @@ export function TaskEditMenu({
     switch (column) {
       case "title": return task.title;
       case "dueDate": return task.dueDate ?? "—";
-      case "priority": return String(task.priority);
+      case "priority": return task.priority !== null ? String(task.priority) : "—";
       case "percentDone": return `${task.percentDone}%`;
       case "timeEstimateMinutes":
         return task.timeEstimateMinutes != null

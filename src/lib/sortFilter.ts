@@ -108,10 +108,10 @@ export function sortTasksFlat(
 function taskMatchesFilter(task: Task, filter: FilterState): boolean {
   if (!filter.showArchived && task.archived) return false;
 
-  if (filter.priorityMin !== null && task.priority < filter.priorityMin) {
+  if (filter.priorityMin !== null && (task.priority === null || task.priority < filter.priorityMin)) {
     return false;
   }
-  if (filter.priorityMax !== null && task.priority > filter.priorityMax) {
+  if (filter.priorityMax !== null && (task.priority === null || task.priority > filter.priorityMax)) {
     return false;
   }
   if (

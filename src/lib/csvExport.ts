@@ -33,7 +33,7 @@ export function tasksToCsv(rows: FlatRow[], allTasks: Task[]): string {
       escapeCsv(task.title),
       escapeCsv(task.createdAt.slice(0, 10)),
       escapeCsv(task.dueDate ?? ""),
-      String(task.priority),
+      task.priority !== null ? String(task.priority) : "",
       String(task.percentDone),
       task.timeEstimateMinutes !== null ? String(task.timeEstimateMinutes) : "",
       escapeCsv(task.fileLink ?? ""),

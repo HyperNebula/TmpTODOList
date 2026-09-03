@@ -28,7 +28,7 @@ export interface Task {
   title: string;
   createdAt: string;
   dueDate: string | null;
-  priority: number;
+  priority: number | null;
   percentDone: number;
   timeEstimateMinutes: number | null;
   fileLink: string | null;

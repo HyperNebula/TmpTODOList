@@ -23,7 +23,7 @@ const taskSchema = z.object({
   title: z.string(),
   createdAt: z.string(),
   dueDate: z.string().nullable(),
-  priority: z.number().int().min(1).max(10),
+  priority: z.number().int().min(1).max(10).nullable(),
   percentDone: z.number().int().min(0).max(100),
   timeEstimateMinutes: z.number().int().nullable(),
   fileLink: z.string().nullable(),

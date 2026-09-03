@@ -266,7 +266,7 @@ export function parseCsvToTasks(csv: string): CsvImportResult {
 
     // Parse priority (clamped 1–10, default 5)
     const rawPriority = getField(row, "Priority");
-    let priority = 5;
+    let priority: number | null = null;
     if (rawPriority !== "") {
       const p = parseInt(rawPriority, 10);
       if (!isNaN(p)) {

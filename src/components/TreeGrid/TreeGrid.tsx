@@ -278,7 +278,8 @@ export function TreeGrid({
         applyUpdates({ dueDate: value || null });
         break;
       case "priority": {
-        const n = Math.min(10, Math.max(1, parseInt(value, 10) || 5));
+        const str = value.trim();
+        const n = str === "" ? null : Math.min(10, Math.max(1, parseInt(str, 10) || 5));
         applyUpdates({ priority: n });
         break;
       }
@@ -362,7 +363,7 @@ export function TreeGrid({
         value = task.dueDate ?? "";
         break;
       case "priority":
-        value = String(task.priority);
+        value = task.priority !== null ? String(task.priority) : "";
         break;
       case "percentDone":
         value = String(task.percentDone);
@@ -489,7 +490,7 @@ export function TreeGrid({
               column === "priority" ? "col-priority" : "",
               doneClass,
               isSelected ? "selected" : "",
-              priorityColorStyle === "cell" && column === "priority" ? `priority-${task.priority}` : ""
+              priorityColorStyle === "cell" && column === "priority" && task.priority !== null ? `priority-${task.priority}` : ""
             ].filter(Boolean).join(" ")}
             onDoubleClick={() => startEdit(task, column)}
           >
@@ -534,7 +535,7 @@ export function TreeGrid({
       case "dueDate":
         return formatDate(task.dueDate);
       case "priority":
-        return task.priority;
+        return task.priority !== null ? task.priority : "";
       case "percentDone":
         return `${task.percentDone}%`;
       case "timeEstimateMinutes":
@@ -625,7 +626,7 @@ export function TreeGrid({
                   className={[
                     multiSelectedIds.has(row.task.id) ? "row-selected" : "",
                     row.task.archived ? "row-archived" : "",
-                    priorityColorStyle === "row" ? `priority-${row.task.priority}` : "",
+                    priorityColorStyle === "row" && row.task.priority !== null ? `priority-${row.task.priority}` : "",
                     rowDragClass(row),
                   ].filter(Boolean).join(" ")}
                   draggable={!isFlatView}

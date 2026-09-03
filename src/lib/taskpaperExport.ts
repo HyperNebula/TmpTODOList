@@ -7,7 +7,7 @@ export function tasksToTaskpaper(rows: FlatRow[]): string {
     const indent = "\t".repeat(depth);
     let line = `${indent}- ${task.title}`;
 
-    if (task.priority !== 5) {
+    if (task.priority !== null && task.priority !== 5) {
       line += ` @priority(${task.priority})`;
     }
 
