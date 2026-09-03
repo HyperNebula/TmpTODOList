@@ -105,7 +105,11 @@ fn write_csv_file(path: String, contents: String) -> Result<(), String> {
 
 #[tauri::command]
 fn open_path(path: String) -> Result<(), String> {
-    tauri_plugin_opener::open_path(&path, None::<&str>).map_err(|e| e.to_string())
+    if path.starts_with("http://") || path.starts_with("https://") {
+        tauri_plugin_opener::open_url(&path, None::<&str>).map_err(|e| e.to_string())
+    } else {
+        tauri_plugin_opener::open_path(&path, None::<&str>).map_err(|e| e.to_string())
+    }
 }
 
 #[tauri::command]
