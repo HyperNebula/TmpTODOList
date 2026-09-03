@@ -11,7 +11,7 @@ const COLUMN_LABELS: Record<ColumnId, string> = {
   priority: "Priority",
   percentDone: "%",
   timeEstimateMinutes: "Estimate",
-  fileLink: "File",
+  fileLink: "Link",
   category: "Category",
   notes: "Notes",
   isProject: "Project",

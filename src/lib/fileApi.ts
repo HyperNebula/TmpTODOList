@@ -178,6 +178,17 @@ export async function openTaskListDialog(): Promise<{
   return { path, contents };
 }
 
+export async function selectFileForLink(): Promise<string | null> {
+  if (!isTauri()) {
+    const result = await webOpenFile([]);
+    return result ? result.path : null;
+  }
+  const path = await open({
+    multiple: false,
+  });
+  return typeof path === "string" ? path : null;
+}
+
 export async function saveTaskListDialog(
   contents: string,
   currentPath: string | null,

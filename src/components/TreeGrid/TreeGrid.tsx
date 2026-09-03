@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ColumnId, FlatRow, Task } from "../../types/task";
 import { DEFAULT_COLUMN_WIDTHS } from "../../types/task";
 import { formatDate, formatMinutes, parseMinutesInput } from "../../lib/format";
-import { openFileLink } from "../../lib/fileApi";
+import { openFileLink, selectFileForLink } from "../../lib/fileApi";
 import { TaskEditMenu } from "./TaskEditMenu";
 import { useSettingsStore } from "../../store/settingsStore";
 import "./TreeGrid.css";
@@ -15,7 +15,7 @@ const COLUMN_LABELS: Record<ColumnId, string> = {
   priority: "!",
   percentDone: "%",
   timeEstimateMinutes: "Est",
-  fileLink: "File",
+  fileLink: "Link",
   category: "Category",
   notes: "Notes",
   isProject: "Project",
@@ -509,13 +509,19 @@ export function TreeGrid({
           : column === "priority" || column === "percentDone"
             ? "number"
             : "text";
-      return (
+      const inputEl = (
         <input
           className="inline-edit"
+          style={column === "fileLink" ? { flex: 1, minWidth: 0 } : undefined}
           type={inputType}
           value={edit.value}
           autoFocus
-          onFocus={(e) => e.target.select()}
+          onFocus={(e) => {
+            e.target.select();
+            if (inputType === "date") {
+              try { e.target.showPicker(); } catch (err) {}
+            }
+          }}
           onClick={(e) => e.stopPropagation()}
           min={column === "priority" ? 1 : column === "percentDone" ? 0 : undefined}
           max={column === "priority" ? 10 : column === "percentDone" ? 100 : undefined}
@@ -529,6 +535,29 @@ export function TreeGrid({
           }}
         />
       );
+
+      if (column === "fileLink") {
+        return (
+          <div style={{ display: 'flex', gap: '4px', width: '100%', alignItems: 'center' }}>
+            {inputEl}
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ padding: '2px 6px', fontSize: '11px', flexShrink: 0 }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                selectFileForLink().then((path) => {
+                  if (path) setEdit({ ...edit, value: path });
+                });
+              }}
+              title="Browse files"
+            >
+              Browse
+            </button>
+          </div>
+        );
+      }
+      return inputEl;
     }
 
     switch (column) {
@@ -542,11 +571,23 @@ export function TreeGrid({
         return `${task.percentDone}%`;
       case "timeEstimateMinutes":
         return formatMinutes(task.timeEstimateMinutes);
-      case "fileLink":
+      case "fileLink": {
+        let displayText = "";
+        if (task.fileLink) {
+          if (task.fileLink.startsWith("http://") || task.fileLink.startsWith("https://")) {
+            try {
+              displayText = new URL(task.fileLink).hostname;
+            } catch {
+              displayText = task.fileLink;
+            }
+          } else {
+            displayText = task.fileLink.split(/[/\\]/).pop() || task.fileLink;
+          }
+        }
         return (
           <span className="file-link-cell">
             <span className="file-link-text" title={task.fileLink ?? ""}>
-              {task.fileLink ? task.fileLink.split(/[/\\]/).pop() : ""}
+              {displayText}
             </span>
             {task.fileLink && (
               <button
@@ -556,12 +597,14 @@ export function TreeGrid({
                   e.stopPropagation();
                   openFileLink(task.fileLink!).catch(console.error);
                 }}
+                title="Open link"
               >
-                Open
+                ↗
               </button>
             )}
           </span>
         );
+      }
       case "category":
         return task.category;
       case "notes":
