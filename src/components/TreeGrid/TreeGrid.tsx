@@ -462,6 +462,7 @@ export function TreeGrid({
                   className="inline-edit"
                   value={edit.value}
                   autoFocus
+                  onFocus={(e) => e.target.select()}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) =>
                     setEdit({ ...edit, value: e.target.value })
@@ -514,6 +515,7 @@ export function TreeGrid({
           type={inputType}
           value={edit.value}
           autoFocus
+          onFocus={(e) => e.target.select()}
           onClick={(e) => e.stopPropagation()}
           min={column === "priority" ? 1 : column === "percentDone" ? 0 : undefined}
           max={column === "priority" ? 10 : column === "percentDone" ? 100 : undefined}

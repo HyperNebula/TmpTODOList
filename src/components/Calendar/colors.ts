@@ -30,5 +30,5 @@ export function getPriorityColor(priority: number | null): string {
     9: "#3b82f6",
     10: "#a855f7",
   };
-  return colors[priority] || getNextColor();
+  return priority !== null ? colors[priority] || getNextColor() : getNextColor();
 }
