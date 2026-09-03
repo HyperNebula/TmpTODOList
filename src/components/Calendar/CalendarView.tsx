@@ -267,6 +267,7 @@ export function CalendarView({
 
         <div className="cal-grid-container">
           <TimeGrid
+            viewMode={viewMode}
             dates={dates}
             today={todayIso()}
             timeblocks={displayTimeblocks}

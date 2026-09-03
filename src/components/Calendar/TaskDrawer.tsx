@@ -132,15 +132,16 @@ export function TaskDrawer({ tasks, onClose }: TaskDrawerProps) {
             style={{ display: 'flex', alignItems: 'center' }}
           >
             {hasChildren ? (
-              <span 
-                className="task-drawer-item-toggle" 
+              <button 
+                type="button"
+                className="fold-btn" 
                 onClick={(e) => toggleCollapse(e, t.id)}
-                style={{ cursor: "pointer", marginRight: "4px", fontSize: "0.8em", width: "12px", display: "inline-block", textAlign: "center" }}
+                style={{ cursor: "pointer", marginRight: "4px" }}
               >
                 {isCollapsed ? "▶" : "▼"}
-              </span>
+              </button>
             ) : (
-              <span style={{ marginRight: "4px", width: "12px", display: "inline-block" }}></span>
+              <span style={{ marginRight: "4px", width: "16px", display: "inline-block" }}></span>
             )}
             
             <span 

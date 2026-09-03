@@ -379,7 +379,8 @@ const DEFAULT_SETTINGS = {
   indentSpacing: 32,
   calendarStartHour: 6,
   calendarEndHour: 22,
-  calendarZoom: 1.5,
+  calendarZoomDay: 1.5,
+  calendarZoomWeek: 1.5,
   compactTimeblockDisplay: "hover" as "hover" | "all" | "notes",
   timeblockEditMode: "button" as "button" | "doubleClick" | "singleClick",
   showTimeblockTimes: false,
@@ -412,7 +413,8 @@ export interface SettingsState {
   indentSpacing: number;
   calendarStartHour: number;
   calendarEndHour: number;
-  calendarZoom: number;
+  calendarZoomDay: number;
+  calendarZoomWeek: number;
   compactTimeblockDisplay: "hover" | "all" | "notes";
   timeblockEditMode: "button" | "doubleClick" | "singleClick";
   showTimeblockTimes: boolean;
@@ -446,7 +448,8 @@ export interface SettingsState {
   setIndentSpacing: (spacing: number) => void;
   setCalendarStartHour: (hour: number) => void;
   setCalendarEndHour: (hour: number) => void;
-  setCalendarZoom: (zoom: number) => void;
+  setCalendarZoomDay: (zoom: number) => void;
+  setCalendarZoomWeek: (zoom: number) => void;
   setCompactTimeblockDisplay: (display: "hover" | "all" | "notes") => void;
   setTimeblockEditMode: (mode: "button" | "doubleClick" | "singleClick") => void;
   setShowTimeblockTimes: (show: boolean) => void;
@@ -498,7 +501,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setIndentSpacing: (spacing) => set({ indentSpacing: spacing }),
   setCalendarStartHour: (hour) => set({ calendarStartHour: hour }),
   setCalendarEndHour: (hour) => set({ calendarEndHour: hour }),
-  setCalendarZoom: (zoom) => set({ calendarZoom: zoom }),
+  setCalendarZoomDay: (zoom) => set({ calendarZoomDay: zoom }),
+  setCalendarZoomWeek: (zoom) => set({ calendarZoomWeek: zoom }),
   setCompactTimeblockDisplay: (display) => set({ compactTimeblockDisplay: display }),
   setTimeblockEditMode: (mode) => set({ timeblockEditMode: mode }),
   setShowTimeblockTimes: (show) => set({ showTimeblockTimes: show }),
@@ -546,7 +550,9 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         indentSpacing?: number;
         calendarStartHour?: number;
         calendarEndHour?: number;
-        calendarZoom?: number;
+        calendarZoomDay?: number;
+        calendarZoomWeek?: number;
+        calendarZoom?: number; // legacy
         compactTimeblockDisplay?: "hover" | "all" | "notes";
         timeblockEditMode?: "button" | "doubleClick" | "singleClick";
         showTimeblockTimes?: boolean;
@@ -581,7 +587,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
           ...(saved.indentSpacing !== undefined && { indentSpacing: saved.indentSpacing }),
           ...(saved.calendarStartHour !== undefined && { calendarStartHour: saved.calendarStartHour }),
           ...(saved.calendarEndHour !== undefined && { calendarEndHour: saved.calendarEndHour }),
-          ...(saved.calendarZoom !== undefined && { calendarZoom: saved.calendarZoom }),
+          ...((saved.calendarZoomDay !== undefined || saved.calendarZoom !== undefined) && { calendarZoomDay: saved.calendarZoomDay ?? saved.calendarZoom }),
+          ...((saved.calendarZoomWeek !== undefined || saved.calendarZoom !== undefined) && { calendarZoomWeek: saved.calendarZoomWeek ?? saved.calendarZoom }),
           ...(saved.compactTimeblockDisplay && { compactTimeblockDisplay: saved.compactTimeblockDisplay }),
           ...(saved.timeblockEditMode && { timeblockEditMode: saved.timeblockEditMode }),
           ...(saved.showTimeblockTimes !== undefined && { showTimeblockTimes: saved.showTimeblockTimes }),
@@ -628,7 +635,8 @@ useSettingsStore.subscribe((state) => {
     indentSpacing: state.indentSpacing,
     calendarStartHour: state.calendarStartHour,
     calendarEndHour: state.calendarEndHour,
-    calendarZoom: state.calendarZoom,
+    calendarZoomDay: state.calendarZoomDay,
+    calendarZoomWeek: state.calendarZoomWeek,
     compactTimeblockDisplay: state.compactTimeblockDisplay,
     timeblockEditMode: state.timeblockEditMode,
     showTimeblockTimes: state.showTimeblockTimes,

@@ -8,6 +8,7 @@ import { useSettingsStore } from "../../store/settingsStore";
 
 
 interface TimeGridProps {
+  viewMode: "day" | "week";
   /** ISO date strings for the columns shown (1 = day view, 7 = week view) */
   dates: string[];
   /** Today's ISO date string (YYYY-MM-DD) for highlighting */
@@ -20,8 +21,6 @@ interface TimeGridProps {
   onEditTimeblock: (id: string, isNew?: boolean) => void;
   onToggleComplete: (id: string, completed: boolean) => void;
 }
-
-
 
 function formatHour(h: number) {
   if (h === 0 || h === 24) return "12 AM";
@@ -120,6 +119,7 @@ function calculateLayout(blocks: Timeblock[]) {
  * headers stay aligned with their columns.
  */
 export function TimeGrid({
+  viewMode,
   dates,
   today,
   timeblocks,
@@ -136,8 +136,8 @@ export function TimeGrid({
   const headerColsRef = useRef<HTMLDivElement>(null);
   const columnMouseDownRef = useRef<{ y: number; time: number } | null>(null);
 
-  const { calendarStartHour, calendarEndHour, calendarZoom } = useSettingsStore();
-  const pxPerMin = calendarZoom ?? 1.5;
+  const { calendarStartHour, calendarEndHour, calendarZoomDay, calendarZoomWeek } = useSettingsStore();
+  const pxPerMin = (viewMode === "day" ? calendarZoomDay : calendarZoomWeek) ?? 1.5;
   const gridStartMin = calendarStartHour * 60;
   const totalHours = calendarEndHour - calendarStartHour;
   const gridHeight = totalHours * 60 * pxPerMin;

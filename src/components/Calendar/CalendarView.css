@@ -216,6 +216,19 @@
   flex-shrink: 0;
 }
 
+.fold-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + var(--font-offset, 0px));
+  color: var(--text-muted);
+  width: 16px;
+  flex-shrink: 0;
+}
+
 /* ── Grid container ───────────────────────────────────────── */
 .cal-grid-container {
   flex: 1;
@@ -502,7 +515,7 @@
   left: 0;
   right: 0;
   height: 0;
-  border-top: 2px dashed #ff4757;
+  border-top: 2px solid #ff4757;
   z-index: 4;
   pointer-events: none;
 }

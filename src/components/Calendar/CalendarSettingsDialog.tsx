@@ -60,7 +60,8 @@ export function CalendarSettingsDialog({ onClose }: Props) {
     autoSaveIntervalMinutes,
     calendarStartHour,
     calendarEndHour,
-    calendarZoom,
+    calendarZoomDay,
+    calendarZoomWeek,
     compactTimeblockDisplay,
     timeblockEditMode,
     showTimeblockTimes,
@@ -74,7 +75,8 @@ export function CalendarSettingsDialog({ onClose }: Props) {
     setAutoSaveIntervalMinutes,
     setCalendarStartHour,
     setCalendarEndHour,
-    setCalendarZoom,
+    setCalendarZoomDay,
+    setCalendarZoomWeek,
     setCompactTimeblockDisplay,
     setTimeblockEditMode,
     setShowTimeblockTimes,
@@ -156,14 +158,27 @@ export function CalendarSettingsDialog({ onClose }: Props) {
               </div>
               <div className="settings-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <label>Calendar Zoom</label>
-                  <span style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>{calendarZoom.toFixed(1)}x</span>
+                  <label>Calendar Zoom (Day View)</label>
+                  <span style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>{calendarZoomDay.toFixed(1)}x</span>
                 </div>
                 <input 
                   type="range" 
                   min="0.5" max="3" step="0.1" 
-                  value={calendarZoom} 
-                  onChange={(e) => setCalendarZoom(Number(e.target.value))} 
+                  value={calendarZoomDay} 
+                  onChange={(e) => setCalendarZoomDay(Number(e.target.value))} 
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div className="settings-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <label>Calendar Zoom (Week View)</label>
+                  <span style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>{calendarZoomWeek.toFixed(1)}x</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0.5" max="3" step="0.1" 
+                  value={calendarZoomWeek} 
+                  onChange={(e) => setCalendarZoomWeek(Number(e.target.value))} 
                   style={{ width: '100%' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75em', color: 'var(--text-muted)', marginTop: '4px' }}>
