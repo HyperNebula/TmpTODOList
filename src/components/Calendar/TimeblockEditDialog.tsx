@@ -14,9 +14,10 @@ interface Props {
   onComplete: (id: string, completed: boolean) => void;
   onDelete: (id: string) => void;
   onAssignTask: (blockId: string, taskId: string) => void;
+  onToggleTaskDone?: (blockId: string, taskId: string) => void;
 }
 
-export function TimeblockEditDialog({ block, isNew, tasks, onSave, onClose, onRemoveTask, onComplete, onDelete, onAssignTask }: Props) {
+export function TimeblockEditDialog({ block, isNew, tasks, onSave, onClose, onRemoveTask, onComplete, onDelete, onAssignTask, onToggleTaskDone }: Props) {
   const [title, setTitle] = useState(block.title || "");
   const [notes, setNotes] = useState(block.notes || "");
   const [color, setColor] = useState(block.color || "");
@@ -230,15 +231,24 @@ export function TimeblockEditDialog({ block, isNew, tasks, onSave, onClose, onRe
             {assignedTasks.length === 0 ? (
               <div style={{ fontSize: '0.9em', color: 'var(--text-muted)' }}>No tasks assigned. Drop tasks onto the block in the calendar.</div>
             ) : (
-              <div className="tb-tasks" style={{ position: 'relative', background: 'transparent', padding: 0 }}>
+              <div className="tb-dialog-tasks-list">
                 {assignedTasks.map(t => (
-                  <div key={t.id} className="tb-chip">
-                    <span className="tb-chip-label">{t.title || "(untitled)"}</span>
+                  <div key={t.id} className={`tb-chip tb-chip-dialog${t.done ? " tb-chip--done" : ""}`}>
+                    <input
+                      type="checkbox"
+                      className="tb-dialog-task-checkbox"
+                      checked={t.done}
+                      onChange={() => onToggleTaskDone?.(block.id, t.id)}
+                      title={t.done ? "Mark task as incomplete" : "Mark task as complete"}
+                    />
+                    <span className="tb-chip-label" style={t.done ? { textDecoration: 'line-through', opacity: 0.6 } : undefined}>
+                      {t.title || "(untitled)"}
+                    </span>
                     <button
+                      type="button"
                       className="tb-chip-remove"
                       onClick={() => onRemoveTask(block.id, t.id)}
                       title="Remove task from block"
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', opacity: 0.6, fontSize: '0.8rem', padding: '0 4px', color: 'inherit' }}
                     >
                       ✕
                     </button>

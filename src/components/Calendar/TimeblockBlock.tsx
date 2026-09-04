@@ -60,7 +60,7 @@ export function TimeblockBlock({
   const durationMin = Math.max(endMin - startMin, 15);
 
   const top = startMin * pxPerMin + 2;
-  const height = Math.max(durationMin * pxPerMin - 4, 10);
+  const height = Math.max(durationMin * pxPerMin - 4, 22);
 
   const timeFormatter = new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
@@ -177,14 +177,17 @@ export function TimeblockBlock({
     .map((id) => tasks.find((t) => t.id === id))
     .filter((t): t is Task => t !== undefined);
 
+  const hasCheckbox = assignedTasks.length > 0;
+  const isShort = height <= 44;
   const isCompact = (styleWidth ?? 100) < 100;
 
   return (
     <div
-      className={`timeblock-block${isResizing ? " timeblock-block--resizing" : ""}${block.completed ? " timeblock-block--completed" : ""}${isCompact ? ` timeblock-block--compact timeblock-block--compact-${compactTimeblockDisplay}` : ""}${dragStateRef.current != null ? " timeblock-block--dragging" : ""}`}
+      className={`timeblock-block${isResizing ? " timeblock-block--resizing" : ""}${block.completed ? " timeblock-block--completed" : ""}${hasCheckbox ? " timeblock-block--has-checkbox" : ""}${isShort ? " timeblock-block--short" : ""}${isCompact ? ` timeblock-block--compact timeblock-block--compact-${compactTimeblockDisplay}` : ""}${dragStateRef.current != null ? " timeblock-block--dragging" : ""}`}
       style={{
         top,
         height,
+        minHeight: 22,
         left: styleLeft !== undefined ? `calc(${styleLeft}% + 4px)` : undefined,
         width: styleWidth !== undefined ? `calc(${styleWidth}% - 8px)` : undefined,
         transform: dragStateRef.current?.deltaX ? `translateX(${dragStateRef.current.deltaX}px)` : undefined,
@@ -203,7 +206,7 @@ export function TimeblockBlock({
           className="tb-edit"
           onClick={() => onEditTimeblock(block.id)}
           title="Edit timeblock"
-          style={{ position: 'absolute', top: '4px', right: '4px', background: 'none', border: 'none', cursor: 'pointer', opacity: isHovered ? 0.7 : 0, fontSize: '0.9rem', color: 'inherit', transition: 'opacity 0.2s' }}
+          style={{ opacity: isHovered ? 0.7 : 0 }}
         >
           ✎
         </button>
@@ -213,13 +216,12 @@ export function TimeblockBlock({
           className="tb-complete-toggle"
           onClick={(e) => { e.stopPropagation(); onToggleComplete(block.id, !block.completed); }}
           title={block.completed ? "Mark Incomplete" : "Mark Complete"}
-          style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: 'inherit', opacity: 0.8, borderRadius: '4px' }}
         >
           {block.completed ? "☑" : "☐"}
         </button>
       )}
 
-      {block.title && <div className="tb-title" style={{ paddingRight: '20px' }}>{block.title}</div>}
+      {block.title && <div className="tb-title">{block.title}</div>}
 
       {showTimeblockTimes && (
         <div className="tb-time" style={{ fontSize: '0.7rem', opacity: 0.8, paddingRight: '20px' }}>
@@ -235,8 +237,13 @@ export function TimeblockBlock({
 
       <div className="tb-tasks" style={{ justifyContent: 'flex-end', paddingBottom: '8px' }}>
         {assignedTasks.map((task) => (
-          <div key={task.id} className="tb-chip">
-            <span className="tb-chip-label">{task.title || "(untitled)"}</span>
+          <div key={task.id} className={`tb-chip${task.done ? " tb-chip--done" : ""}`}>
+            <span
+              className="tb-chip-label"
+              style={task.done ? { textDecoration: 'line-through', opacity: 0.6 } : undefined}
+            >
+              {task.title || "(untitled)"}
+            </span>
           </div>
         ))}
       </div>

@@ -383,6 +383,7 @@
   position: absolute;
   left: 4px;
   width: calc(100% - 8px);
+  min-height: 22px;
   background: var(--accent);
   color: var(--accent-text);
   border-radius: 6px;
@@ -416,6 +417,10 @@
   opacity: 0.8 !important;
 }
 
+.timeblock-block--short {
+  padding: 3px 6px 4px;
+}
+
 .timeblock-block--compact-hover:not(:hover) .tb-notes,
 .timeblock-block--compact-hover:not(:hover) .tb-tasks {
   display: none;
@@ -441,9 +446,56 @@
   flex-shrink: 0;
 }
 
-@container (max-height: 35px) {
+.tb-edit {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: inherit;
+  transition: opacity 0.2s;
+  line-height: 1;
+  padding: 0;
+}
+
+.tb-complete-toggle {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: inherit;
+  opacity: 0.8;
+  border-radius: 4px;
+  line-height: 1;
+  padding: 0;
+}
+
+.tb-complete-toggle:hover {
+  opacity: 1;
+}
+
+@container (max-height: 44px) {
   .tb-time {
     display: none;
+  }
+
+  .timeblock-block--has-checkbox .tb-complete-toggle {
+    top: 3px;
+    bottom: auto;
+    left: 4px;
+  }
+
+  .timeblock-block--has-checkbox .tb-title {
+    padding-left: 20px;
+  }
+
+  .tb-edit {
+    top: 3px;
   }
 }
 
@@ -465,6 +517,14 @@
   padding: 1px 4px;
   font-size: 0.7rem;
   overflow: hidden;
+}
+
+.tb-chip--done {
+  opacity: 0.6;
+}
+
+.tb-chip--done .tb-chip-label {
+  text-decoration: line-through;
 }
 
 .tb-chip-label {

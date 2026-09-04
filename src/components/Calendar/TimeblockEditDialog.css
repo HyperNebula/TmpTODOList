@@ -88,3 +88,64 @@
   justify-content: flex-end;
   gap: 8px;
 }
+
+.tb-dialog-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.tb-chip-dialog {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+
+.tb-chip-dialog.tb-chip--done {
+  opacity: 0.65;
+}
+
+.tb-chip-dialog.tb-chip--done .tb-chip-label {
+  text-decoration: line-through;
+}
+
+.tb-dialog-task-checkbox {
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.tb-chip-dialog .tb-chip-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-chip-dialog .tb-chip-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  line-height: 1;
+  border-radius: 3px;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tb-chip-dialog .tb-chip-remove:hover {
+  color: var(--danger, #dc2626);
+  background: rgba(220, 38, 38, 0.12);
+}

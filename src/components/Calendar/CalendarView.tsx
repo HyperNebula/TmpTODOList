@@ -9,7 +9,7 @@ import { RecurrenceEditPrompt } from "./RecurrenceEditPrompt";
 import { getNextColor } from "./colors";
 import "./CalendarView.css";
 import { rrulestr, RRule } from "rrule";
-import type { Timeblock } from "../../types/task";
+import type { Timeblock, Task } from "../../types/task";
 
 type CalendarViewMode = "day" | "week";
 
@@ -153,6 +153,23 @@ export function CalendarView({
       setPendingAction({ type: "delete", id });
     } else {
       calendarStore.deleteTimeblock(id);
+    }
+  }
+
+  function handleToggleTaskDone(blockId: string, taskId: string) {
+    store.toggleDone(taskId);
+
+    const block = timeblocks.find(b => b.id === blockId);
+    if (block && block.taskIds.length > 0) {
+      const updatedTasks = useTaskStore.getState().file.tasks;
+      const blockTasks = block.taskIds
+        .map(id => updatedTasks.find(t => t.id === id))
+        .filter((t): t is Task => t !== undefined);
+
+      const allDone = blockTasks.length > 0 && blockTasks.every(t => t.done);
+      if (allDone !== !!block.completed) {
+        handleUpdateTimeblock(block.id, { completed: allDone });
+      }
     }
   }
 
@@ -302,7 +319,21 @@ export function CalendarView({
           tasks={tasks}
           onSave={handleUpdateTimeblock}
           onClose={() => setEditingBlock(null)}
-          onRemoveTask={calendarStore.removeTaskFromTimeblock}
+          onRemoveTask={(blockId, taskId) => {
+            calendarStore.removeTaskFromTimeblock(blockId, taskId);
+            const block = timeblocks.find(b => b.id === blockId);
+            if (block) {
+              const remainingIds = block.taskIds.filter(id => id !== taskId);
+              if (remainingIds.length > 0) {
+                const allTasks = useTaskStore.getState().file.tasks;
+                const remTasks = remainingIds.map(id => allTasks.find(t => t.id === id)).filter((t): t is Task => t !== undefined);
+                const allDone = remTasks.length > 0 && remTasks.every(t => t.done);
+                if (allDone !== !!block.completed) {
+                  handleUpdateTimeblock(block.id, { completed: allDone });
+                }
+              }
+            }
+          }}
           onComplete={(id, completed) => {
             const info = getParentInfo(id);
             if (info && id.startsWith("virtual_")) {
@@ -319,7 +350,15 @@ export function CalendarView({
             } else {
               calendarStore.assignTaskToTimeblock(blockId, taskId);
             }
+            const block = timeblocks.find(b => b.id === blockId);
+            if (block && block.completed) {
+              const assignedTask = store.file.tasks.find(t => t.id === taskId);
+              if (assignedTask && !assignedTask.done) {
+                handleUpdateTimeblock(block.id, { completed: false });
+              }
+            }
           }}
+          onToggleTaskDone={handleToggleTaskDone}
         />
       )}
 
