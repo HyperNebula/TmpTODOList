@@ -70,6 +70,7 @@ interface TaskStore {
   toggleDone: (taskId: string) => void;
   toggleCollapsed: (taskId: string) => void;
   toggleAllTasksFolded: () => void;
+  expandAllTasks: () => void;
   duplicateSelectedTask: () => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   updateTasks: (taskIds: string[], updates: Partial<Task>) => void;
@@ -334,6 +335,21 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       }
       return t;
     });
+
+    set((s) => ({
+      file: touch({ ...s.file, tasks }),
+      dirty: true,
+    }));
+  },
+
+  expandAllTasks: () => {
+    const file = get().file;
+    const hasCollapsed = file.tasks.some(t => t.collapsed);
+    if (!hasCollapsed) return;
+
+    const tasks = file.tasks.map(t =>
+      t.collapsed ? { ...t, collapsed: false } : t,
+    );
 
     set((s) => ({
       file: touch({ ...s.file, tasks }),

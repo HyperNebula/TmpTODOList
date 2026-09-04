@@ -6,6 +6,7 @@ interface FilterBarProps {
   sort: SortState | null;
   onChange: (partial: Partial<FilterState>) => void;
   onSortChange: (sort: SortState | null) => void;
+  onExpandAll: () => void;
   onClear: () => void;
   onSavePreset: () => void;
 }
@@ -29,7 +30,7 @@ function getActiveQuickFilter(filter: FilterState): QuickFilter {
   return null;
 }
 
-export function FilterBar({ filter, sort, onChange, onSortChange, onClear, onSavePreset }: FilterBarProps) {
+export function FilterBar({ filter, sort, onChange, onSortChange, onExpandAll, onClear, onSavePreset }: FilterBarProps) {
   const activeQuick = getActiveQuickFilter(filter);
 
   const applyQuickFilter = (kind: "today" | "tomorrow" | "week") => {
@@ -43,6 +44,7 @@ export function FilterBar({ filter, sort, onChange, onSortChange, onClear, onSav
     const range = ranges[kind]();
     onChange({ dueAfter: range.dueAfter, dueBefore: range.dueBefore });
     onSortChange({ column: "dueDate", direction: "asc" });
+    onExpandAll();
   };
 
   return (

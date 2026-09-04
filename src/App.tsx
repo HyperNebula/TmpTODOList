@@ -606,6 +606,7 @@ function App() {
               sort={store.sort}
               onChange={store.setFilter}
               onSortChange={store.setSort}
+              onExpandAll={store.expandAllTasks}
               onClear={store.clearFilter}
               onSavePreset={() => setPresetPromptState({ initialValue: "New Preset" })}
             />
