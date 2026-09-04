@@ -130,6 +130,9 @@ function taskMatchesFilter(task: Task, filter: FilterState): boolean {
       return false;
     }
   }
+  if ((filter.dueBefore || filter.dueAfter) && !task.dueDate) {
+    return false;
+  }
   if (filter.dueBefore && task.dueDate && task.dueDate > filter.dueBefore) {
     return false;
   }

@@ -74,8 +74,8 @@ describe("sortFilter", () => {
     const ids = filtered.map((t) => t.id);
     expect(ids).toContain("a");
     expect(ids).not.toContain("b");
-    // Tasks with no due date pass through the filter (existing behavior)
-    expect(ids).toContain("c");
+    // Tasks with no due date are excluded when a date filter is active
+    expect(ids).not.toContain("c");
   });
 
   it("filters to tasks due within a 7-day window", () => {
