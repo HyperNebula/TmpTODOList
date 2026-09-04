@@ -221,6 +221,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       return;
     }
 
+    if (multiSelectedIds.has(id)) {
+      set({ selectedTaskId: id });
+      return;
+    }
+
     set({ selectedTaskId: id, multiSelectedIds: new Set([id]) });
   },
 
@@ -238,6 +243,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       file: touch({ ...s.file, tasks }),
       dirty: true,
       selectedTaskId: newTaskId,
+      multiSelectedIds: new Set([newTaskId]),
     }));
     return newTaskId;
   },
@@ -248,6 +254,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       file: touch({ ...s.file, tasks }),
       dirty: true,
       selectedTaskId: newTaskId,
+      multiSelectedIds: new Set([newTaskId]),
     }));
     return newTaskId;
   },
@@ -258,6 +265,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       file: touch({ ...s.file, tasks }),
       dirty: true,
       selectedTaskId: newTaskId,
+      multiSelectedIds: new Set([newTaskId]),
     }));
     return newTaskId;
   },
