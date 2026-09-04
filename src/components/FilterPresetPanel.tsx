@@ -3,11 +3,38 @@ import { useTaskStore } from "../store/taskStore";
 import { useState } from "react";
 import { PromptDialog } from "./PromptDialog";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { getTodayRange, getTomorrowRange, getWeekRange } from "../lib/dateUtils";
+import type { FilterState } from "../types/task";
 import "./FilterPresetPanel.css";
 
 interface Props {
   position: "left" | "right" | "top";
 }
+
+type QuickFilter = "today" | "tomorrow" | "week" | null;
+
+function getActiveQuickFilter(filter: FilterState): QuickFilter {
+  const today = getTodayRange();
+  const tomorrow = getTomorrowRange();
+  const week = getWeekRange();
+
+  if (filter.dueAfter === today.dueAfter && filter.dueBefore === today.dueBefore) {
+    return "today";
+  }
+  if (filter.dueAfter === tomorrow.dueAfter && filter.dueBefore === tomorrow.dueBefore) {
+    return "tomorrow";
+  }
+  if (filter.dueAfter === week.dueAfter && filter.dueBefore === week.dueBefore) {
+    return "week";
+  }
+  return null;
+}
+
+const QUICK_FILTERS = [
+  { kind: "today" as const, label: "Due Today", title: "Show only tasks due today" },
+  { kind: "tomorrow" as const, label: "Today & Tomorrow", title: "Show tasks due today and tomorrow" },
+  { kind: "week" as const, label: "Due This Week", title: "Show tasks due within the next 7 days" },
+] as const;
 
 export function FilterPresetPanel({ position }: Props) {
   const {
@@ -35,6 +62,21 @@ export function FilterPresetPanel({ position }: Props) {
 
   if (filterPresetPanelPosition !== position) return null;
 
+  const activeQuick = getActiveQuickFilter(store.filter);
+
+  const applyQuickFilter = (kind: "today" | "tomorrow" | "week") => {
+    if (activeQuick === kind) {
+      store.setFilter({ dueAfter: null, dueBefore: null });
+      store.setSort(null);
+      return;
+    }
+    const ranges = { today: getTodayRange, tomorrow: getTomorrowRange, week: getWeekRange };
+    const range = ranges[kind]();
+    store.setFilter({ dueAfter: range.dueAfter, dueBefore: range.dueBefore });
+    store.setSort({ column: "dueDate", direction: "asc" });
+    store.expandAllTasks();
+  };
+
   const applyPreset = (preset: typeof filterPresets[0]) => {
     store.setFilter(preset.filter);
     if (preset.sort !== undefined) {
@@ -50,6 +92,19 @@ export function FilterPresetPanel({ position }: Props) {
   if (position === "top") {
     return (
       <div className="filter-preset-panel top-panel">
+        <div className="quick-filters">
+          {QUICK_FILTERS.map((qf) => (
+            <button
+              key={qf.kind}
+              type="button"
+              className={`btn${activeQuick === qf.kind ? " btn-primary" : ""}`}
+              onClick={() => applyQuickFilter(qf.kind)}
+              title={qf.title}
+            >
+              {qf.label}
+            </button>
+          ))}
+        </div>
         <span className="panel-label">Presets:</span>
         {hasPresets ? (
           <div className="preset-list horizontal">
@@ -164,6 +219,19 @@ export function FilterPresetPanel({ position }: Props) {
           </button>
         </div>
         <div className="sidebar-content">
+          <div className="quick-filters vertical">
+            {QUICK_FILTERS.map((qf) => (
+              <button
+                key={qf.kind}
+                type="button"
+                className={`btn${activeQuick === qf.kind ? " btn-primary" : ""}`}
+                onClick={() => applyQuickFilter(qf.kind)}
+                title={qf.title}
+              >
+                {qf.label}
+              </button>
+            ))}
+          </div>
           {hasPresets ? (
             <div className="preset-list vertical">
               {filterPresets.map((preset) => (

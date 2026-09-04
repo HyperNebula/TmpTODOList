@@ -9,6 +9,24 @@
   border: 1px solid var(--border);
 }
 
+.filter-preset-panel .quick-filters {
+  display: flex;
+  gap: 4px;
+  padding-right: 8px;
+  border-right: 1px solid var(--border);
+  margin-right: 2px;
+}
+
+.filter-preset-panel .quick-filters.vertical {
+  flex-direction: column;
+  border-right: none;
+  padding-right: 0;
+  padding-bottom: 8px;
+  margin-right: 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
 .panel-label {
   font-weight: 600;
   font-size: 0.9em;
