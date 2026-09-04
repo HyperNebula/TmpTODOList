@@ -234,30 +234,32 @@ export function TimeblockBlock({
         )}
       </div>
 
-      {showTimeblockTimes && (
+      {!isShort && showTimeblockTimes && (
         <div className="tb-time" style={{ fontSize: '0.7rem', opacity: 0.8, paddingRight: '20px' }}>
           {startTimeDisplay} - {endTimeDisplay}
         </div>
       )}
 
-      {block.notes && (
+      {!isShort && block.notes && (
         <div className="tb-notes" style={{ fontSize: '0.8rem', opacity: 0.8, margin: '2px 8px', whiteSpace: 'pre-wrap', overflow: 'hidden', textOverflow: 'ellipsis', minHeight: 0, flexShrink: 1 }}>
           {block.notes}
         </div>
       )}
 
-      <div className="tb-tasks" style={{ justifyContent: 'flex-end', paddingBottom: '8px' }}>
-        {assignedTasks.map((task) => (
-          <div key={task.id} className={`tb-chip${task.done ? " tb-chip--done" : ""}`}>
-            <span
-              className="tb-chip-label"
-              style={task.done ? { textDecoration: 'line-through', opacity: 0.6 } : undefined}
-            >
-              {task.title || "(untitled)"}
-            </span>
-          </div>
-        ))}
-      </div>
+      {!isShort && assignedTasks.length > 0 && (
+        <div className="tb-tasks" style={{ justifyContent: 'flex-end', paddingBottom: '8px' }}>
+          {assignedTasks.map((task) => (
+            <div key={task.id} className={`tb-chip${task.done ? " tb-chip--done" : ""}`}>
+              <span
+                className="tb-chip-label"
+                style={task.done ? { textDecoration: 'line-through', opacity: 0.6 } : undefined}
+              >
+                {task.title || "(untitled)"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {assignedTasks.length > 0 && !isShort && (
         <button
