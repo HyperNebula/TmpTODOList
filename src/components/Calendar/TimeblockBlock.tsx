@@ -201,27 +201,38 @@ export function TimeblockBlock({
         if (timeblockEditMode === "doubleClick") onEditTimeblock(block.id);
       }}
     >
-      {timeblockEditMode === "button" && (
-        <button
-          className="tb-edit"
-          onClick={() => onEditTimeblock(block.id)}
-          title="Edit timeblock"
-          style={{ opacity: isHovered ? 0.7 : 0 }}
-        >
-          ✎
-        </button>
-      )}
-      {assignedTasks.length > 0 && (
-        <button
-          className="tb-complete-toggle"
-          onClick={(e) => { e.stopPropagation(); onToggleComplete(block.id, !block.completed); }}
-          title={block.completed ? "Mark Incomplete" : "Mark Complete"}
-        >
-          {block.completed ? "☑" : "☐"}
-        </button>
-      )}
+      <div className="tb-header">
+        {assignedTasks.length > 0 && isShort && (
+          <button
+            type="button"
+            className={`tb-complete-toggle tb-complete-toggle--inline${block.completed ? " tb-complete-toggle--checked" : ""}`}
+            onClick={(e) => { e.stopPropagation(); onToggleComplete(block.id, !block.completed); }}
+            title={block.completed ? "Mark Incomplete" : "Mark Complete"}
+          >
+            <span className="tb-checkbox-box">
+              {block.completed && (
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="tb-check-svg">
+                  <polyline points="3.5 8.5 6.5 11.5 12.5 5.5" />
+                </svg>
+              )}
+            </span>
+          </button>
+        )}
 
-      {block.title && <div className="tb-title">{block.title}</div>}
+        {block.title && <div className="tb-title">{block.title}</div>}
+
+        {timeblockEditMode === "button" && (
+          <button
+            type="button"
+            className="tb-edit"
+            onClick={() => onEditTimeblock(block.id)}
+            title="Edit timeblock"
+            style={{ opacity: isHovered ? 0.7 : 0 }}
+          >
+            ✎
+          </button>
+        )}
+      </div>
 
       {showTimeblockTimes && (
         <div className="tb-time" style={{ fontSize: '0.7rem', opacity: 0.8, paddingRight: '20px' }}>
@@ -247,6 +258,23 @@ export function TimeblockBlock({
           </div>
         ))}
       </div>
+
+      {assignedTasks.length > 0 && !isShort && (
+        <button
+          type="button"
+          className={`tb-complete-toggle tb-complete-toggle--bottom${block.completed ? " tb-complete-toggle--checked" : ""}`}
+          onClick={(e) => { e.stopPropagation(); onToggleComplete(block.id, !block.completed); }}
+          title={block.completed ? "Mark Incomplete" : "Mark Complete"}
+        >
+          <span className="tb-checkbox-box">
+            {block.completed && (
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="tb-check-svg">
+                <polyline points="3.5 8.5 6.5 11.5 12.5 5.5" />
+              </svg>
+            )}
+          </span>
+        </button>
+      )}
 
       <div
         className="tb-resize-handle"
