@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { getTodayRange, getWeekRange } from "./dateUtils";
+import { getTodayRange, getTomorrowRange, getWeekRange } from "./dateUtils";
 
 describe("dateUtils", () => {
   afterEach(() => {
@@ -12,6 +12,14 @@ describe("dateUtils", () => {
     const range = getTodayRange();
     expect(range.dueAfter).toBe("2026-09-04");
     expect(range.dueBefore).toBe("2026-09-04");
+  });
+
+  it("getTomorrowRange returns today through tomorrow", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 4)); // Sep 4, 2026
+    const range = getTomorrowRange();
+    expect(range.dueAfter).toBe("2026-09-04");
+    expect(range.dueBefore).toBe("2026-09-05");
   });
 
   it("getWeekRange returns a 7-day window starting today", () => {

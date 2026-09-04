@@ -1,4 +1,4 @@
-import { getTodayRange, getWeekRange } from "../lib/dateUtils";
+import { getTodayRange, getTomorrowRange, getWeekRange } from "../lib/dateUtils";
 import type { FilterState, SortState } from "../types/task";
 
 interface FilterBarProps {
@@ -10,14 +10,18 @@ interface FilterBarProps {
   onSavePreset: () => void;
 }
 
-type QuickFilter = "today" | "week" | null;
+type QuickFilter = "today" | "tomorrow" | "week" | null;
 
 function getActiveQuickFilter(filter: FilterState): QuickFilter {
   const today = getTodayRange();
+  const tomorrow = getTomorrowRange();
   const week = getWeekRange();
 
   if (filter.dueAfter === today.dueAfter && filter.dueBefore === today.dueBefore) {
     return "today";
+  }
+  if (filter.dueAfter === tomorrow.dueAfter && filter.dueBefore === tomorrow.dueBefore) {
+    return "tomorrow";
   }
   if (filter.dueAfter === week.dueAfter && filter.dueBefore === week.dueBefore) {
     return "week";
@@ -28,14 +32,15 @@ function getActiveQuickFilter(filter: FilterState): QuickFilter {
 export function FilterBar({ filter, sort, onChange, onSortChange, onClear, onSavePreset }: FilterBarProps) {
   const activeQuick = getActiveQuickFilter(filter);
 
-  const applyQuickFilter = (kind: "today" | "week") => {
+  const applyQuickFilter = (kind: "today" | "tomorrow" | "week") => {
     if (activeQuick === kind) {
       // Toggle off: clear date bounds and sort
       onChange({ dueAfter: null, dueBefore: null });
       onSortChange(null);
       return;
     }
-    const range = kind === "today" ? getTodayRange() : getWeekRange();
+    const ranges = { today: getTodayRange, tomorrow: getTomorrowRange, week: getWeekRange };
+    const range = ranges[kind]();
     onChange({ dueAfter: range.dueAfter, dueBefore: range.dueBefore });
     onSortChange({ column: "dueDate", direction: "asc" });
   };
@@ -50,6 +55,14 @@ export function FilterBar({ filter, sort, onChange, onSortChange, onClear, onSav
           title="Show only tasks due today"
         >
           Due Today
+        </button>
+        <button
+          type="button"
+          className={`btn${activeQuick === "tomorrow" ? " btn-primary" : ""}`}
+          onClick={() => applyQuickFilter("tomorrow")}
+          title="Show tasks due today and tomorrow"
+        >
+          Today &amp; Tomorrow
         </button>
         <button
           type="button"
