@@ -603,7 +603,9 @@ function App() {
 
             <FilterBar
               filter={store.filter}
+              sort={store.sort}
               onChange={store.setFilter}
+              onSortChange={store.setSort}
               onClear={store.clearFilter}
               onSavePreset={() => setPresetPromptState({ initialValue: "New Preset" })}
             />

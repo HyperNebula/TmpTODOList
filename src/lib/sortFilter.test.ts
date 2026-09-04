@@ -58,4 +58,42 @@ describe("sortFilter", () => {
     const filtered = filterTasksTreeAware(archived, DEFAULT_FILTER);
     expect(filtered.find((t) => t.id === "l")).toBeUndefined();
   });
+
+  it("filters to tasks due today using dueAfter and dueBefore", () => {
+    const today = "2026-09-04";
+    const dated = [
+      createTask({ id: "a", title: "Due today", dueDate: "2026-09-04", parentId: null, order: 0 }),
+      createTask({ id: "b", title: "Due tomorrow", dueDate: "2026-09-05", parentId: null, order: 1 }),
+      createTask({ id: "c", title: "No due date", dueDate: null, parentId: null, order: 2 }),
+    ];
+    const filtered = filterTasksTreeAware(dated, {
+      ...DEFAULT_FILTER,
+      dueAfter: today,
+      dueBefore: today,
+    });
+    const ids = filtered.map((t) => t.id);
+    expect(ids).toContain("a");
+    expect(ids).not.toContain("b");
+    // Tasks with no due date pass through the filter (existing behavior)
+    expect(ids).toContain("c");
+  });
+
+  it("filters to tasks due within a 7-day window", () => {
+    const dated = [
+      createTask({ id: "a", title: "Due today", dueDate: "2026-09-04", parentId: null, order: 0 }),
+      createTask({ id: "b", title: "Due in 3 days", dueDate: "2026-09-07", parentId: null, order: 1 }),
+      createTask({ id: "c", title: "Due in 6 days", dueDate: "2026-09-10", parentId: null, order: 2 }),
+      createTask({ id: "d", title: "Due in 10 days", dueDate: "2026-09-14", parentId: null, order: 3 }),
+    ];
+    const filtered = filterTasksTreeAware(dated, {
+      ...DEFAULT_FILTER,
+      dueAfter: "2026-09-04",
+      dueBefore: "2026-09-10",
+    });
+    const ids = filtered.map((t) => t.id);
+    expect(ids).toContain("a");
+    expect(ids).toContain("b");
+    expect(ids).toContain("c");
+    expect(ids).not.toContain("d");
+  });
 });

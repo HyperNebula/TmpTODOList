@@ -1,15 +1,66 @@
-import type { FilterState } from "../types/task";
+import { getTodayRange, getWeekRange } from "../lib/dateUtils";
+import type { FilterState, SortState } from "../types/task";
 
 interface FilterBarProps {
   filter: FilterState;
+  sort: SortState | null;
   onChange: (partial: Partial<FilterState>) => void;
+  onSortChange: (sort: SortState | null) => void;
   onClear: () => void;
   onSavePreset: () => void;
 }
 
-export function FilterBar({ filter, onChange, onClear, onSavePreset }: FilterBarProps) {
+type QuickFilter = "today" | "week" | null;
+
+function getActiveQuickFilter(filter: FilterState): QuickFilter {
+  const today = getTodayRange();
+  const week = getWeekRange();
+
+  if (filter.dueAfter === today.dueAfter && filter.dueBefore === today.dueBefore) {
+    return "today";
+  }
+  if (filter.dueAfter === week.dueAfter && filter.dueBefore === week.dueBefore) {
+    return "week";
+  }
+  return null;
+}
+
+export function FilterBar({ filter, sort, onChange, onSortChange, onClear, onSavePreset }: FilterBarProps) {
+  const activeQuick = getActiveQuickFilter(filter);
+
+  const applyQuickFilter = (kind: "today" | "week") => {
+    if (activeQuick === kind) {
+      // Toggle off: clear date bounds and sort
+      onChange({ dueAfter: null, dueBefore: null });
+      onSortChange(null);
+      return;
+    }
+    const range = kind === "today" ? getTodayRange() : getWeekRange();
+    onChange({ dueAfter: range.dueAfter, dueBefore: range.dueBefore });
+    onSortChange({ column: "dueDate", direction: "asc" });
+  };
+
   return (
     <div className="filter-bar">
+      <div className="quick-filters">
+        <button
+          type="button"
+          className={`btn${activeQuick === "today" ? " btn-primary" : ""}`}
+          onClick={() => applyQuickFilter("today")}
+          title="Show only tasks due today"
+        >
+          Due Today
+        </button>
+        <button
+          type="button"
+          className={`btn${activeQuick === "week" ? " btn-primary" : ""}`}
+          onClick={() => applyQuickFilter("week")}
+          title="Show tasks due within the next 7 days"
+        >
+          Due This Week
+        </button>
+      </div>
+
       <label>
         Priority ≥
         <select
