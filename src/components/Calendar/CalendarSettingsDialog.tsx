@@ -66,6 +66,7 @@ export function CalendarSettingsDialog({ onClose }: Props) {
     timeblockEditMode,
     showTimeblockTimes,
     defaultAppView,
+    showPastDue,
     setActiveThemeId,
     saveCustomTheme,
     deleteCustomTheme,
@@ -81,6 +82,7 @@ export function CalendarSettingsDialog({ onClose }: Props) {
     setTimeblockEditMode,
     setShowTimeblockTimes,
     setDefaultAppView,
+    setShowPastDue,
     resetSettings,
   } = useSettingsStore();
 
@@ -252,6 +254,19 @@ export function CalendarSettingsDialog({ onClose }: Props) {
                   <option value="calendar">Calendar</option>
                   <option value="lastOpen">Last Open View</option>
                 </select>
+              </div>
+              <div className="settings-group">
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "normal" }}>
+                  <input
+                    type="checkbox"
+                    checked={showPastDue}
+                    onChange={(e) => setShowPastDue(e.target.checked)}
+                  />
+                  <strong>Include Past Due Tasks in Date Filters</strong>
+                </label>
+                <span style={{ fontSize: "0.85em", color: "var(--text-muted)", marginLeft: "24px", display: "block", marginTop: "4px" }}>
+                  When using quick date filter buttons (Due Today, This Week, etc.), also show tasks whose due date has already passed.
+                </span>
               </div>
               <div className="settings-group">
                 <label style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "normal" }}>
