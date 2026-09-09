@@ -147,6 +147,36 @@ export function TimeGrid({
     return d.getHours() * 60 + d.getMinutes();
   });
 
+  const hasScrolledToNow = useRef(false);
+
+  useEffect(() => {
+    if (hasScrolledToNow.current) return;
+
+    const scrollToCurrentTime = () => {
+      if (!wrapperRef.current || hasScrolledToNow.current) return;
+      const el = wrapperRef.current;
+      if (el.clientHeight === 0) return;
+      let targetY = (currentTimeMin - gridStartMin) * pxPerMin;
+      if (currentTimeMin < gridStartMin) {
+        targetY = 0;
+      } else if (currentTimeMin > calendarEndHour * 60) {
+        targetY = totalHours * 60 * pxPerMin;
+      }
+      const scrollPos = Math.max(0, targetY - el.clientHeight / 2);
+      el.scrollTop = scrollPos;
+      hasScrolledToNow.current = true;
+    };
+
+    scrollToCurrentTime();
+    const rafId = requestAnimationFrame(scrollToCurrentTime);
+    const timer = setTimeout(scrollToCurrentTime, 100);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timer);
+    };
+  }, [currentTimeMin, gridStartMin, calendarEndHour, totalHours, pxPerMin]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       const d = new Date();
