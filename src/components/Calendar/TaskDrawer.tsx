@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import type { Task } from "../../types/task";
 import { getPriorityColor } from "./colors";
+import { useSettingsStore } from "../../store/settingsStore";
 
 interface TaskDrawerProps {
   tasks: Task[];
@@ -9,7 +10,7 @@ interface TaskDrawerProps {
   onClose: () => void;
 }
 
-type FilterMode = "all" | "today" | "next_week" | "priority";
+type FilterMode = "all" | "today" | "today_tomorrow" | "next_week" | "priority";
 
 interface TreeNode {
   task: Task;
@@ -33,6 +34,7 @@ function comparePriority(a: Task, b: Task, dir: "asc" | "desc"): number {
  * Tasks are draggable onto the calendar time grid to create timeblocks.
  */
 export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskDrawerProps) {
+  const { showPastDue } = useSettingsStore();
   const [search, setSearch] = useState("");
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
   const [prioritySortDir, setPrioritySortDir] = useState<"asc" | "desc">("asc");
@@ -82,6 +84,13 @@ export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskD
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   
   const todayIso = toIsoDate(new Date());
+
+  const getTomorrowIso = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return toIsoDate(d);
+  };
+  const tomorrowIso = getTomorrowIso();
   
   const getNextWeekIso = () => {
     const d = new Date();
@@ -101,9 +110,23 @@ export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskD
 
     // Date filtering
     if (filterMode === "today") {
-      if (!t.dueDate || t.dueDate !== todayIso) return false;
+      if (showPastDue) {
+        if (!t.dueDate || t.dueDate > todayIso) return false;
+      } else {
+        if (!t.dueDate || t.dueDate !== todayIso) return false;
+      }
+    } else if (filterMode === "today_tomorrow") {
+      if (showPastDue) {
+        if (!t.dueDate || t.dueDate > tomorrowIso) return false;
+      } else {
+        if (!t.dueDate || t.dueDate < todayIso || t.dueDate > tomorrowIso) return false;
+      }
     } else if (filterMode === "next_week") {
-      if (!t.dueDate || t.dueDate < todayIso || t.dueDate > nextWeekIso) return false;
+      if (showPastDue) {
+        if (!t.dueDate || t.dueDate > nextWeekIso) return false;
+      } else {
+        if (!t.dueDate || t.dueDate < todayIso || t.dueDate > nextWeekIso) return false;
+      }
     }
 
     return true;
@@ -228,6 +251,18 @@ export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskD
     });
   }
 
+  const handlePriorityClick = () => {
+    if (filterMode !== "priority") {
+      setFilterMode("priority");
+      setPrioritySortDir("asc");
+    } else if (prioritySortDir === "asc") {
+      setPrioritySortDir("desc");
+    } else {
+      setFilterMode("all");
+      setPrioritySortDir("asc");
+    }
+  };
+
   return (
     <div className="task-drawer" style={{ width: localWidth }}>
       <div
@@ -250,39 +285,36 @@ export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskD
           onChange={(e) => setSearch(e.target.value)}
           className="task-drawer-search-input"
         />
-        <div className="task-drawer-filters" style={{ display: "flex", gap: "4px", marginTop: "8px", flexWrap: "wrap" }}>
+        <div className="task-drawer-filters">
           <button 
-            className={`btn ${filterMode === "all" ? "active" : ""}`} 
-            onClick={() => setFilterMode("all")}
-            style={{ flex: "1 1 calc(50% - 4px)", fontSize: "0.75rem", padding: "4px" }}
-          >
-            All
-          </button>
-          <button 
-            className={`btn ${filterMode === "today" ? "active" : ""}`} 
-            onClick={() => setFilterMode("today")}
-            style={{ flex: "1 1 calc(50% - 4px)", fontSize: "0.75rem", padding: "4px" }}
+            type="button"
+            className={`btn task-drawer-filter-btn${filterMode === "today" ? " active" : ""}`} 
+            onClick={() => setFilterMode((prev) => (prev === "today" ? "all" : "today"))}
+            title={showPastDue ? "Show tasks due today and past due. Click again for all tasks." : "Show tasks due today. Click again for all tasks."}
           >
             Today
           </button>
           <button 
-            className={`btn ${filterMode === "next_week" ? "active" : ""}`} 
-            onClick={() => setFilterMode("next_week")}
-            style={{ flex: "1 1 calc(50% - 4px)", fontSize: "0.75rem", padding: "4px" }}
+            type="button"
+            className={`btn task-drawer-filter-btn${filterMode === "today_tomorrow" ? " active" : ""}`} 
+            onClick={() => setFilterMode((prev) => (prev === "today_tomorrow" ? "all" : "today_tomorrow"))}
+            title={showPastDue ? "Show tasks due through tomorrow and past due. Click again for all tasks." : "Show tasks due today and tomorrow. Click again for all tasks."}
+          >
+            Today/Tomorrow
+          </button>
+          <button 
+            type="button"
+            className={`btn task-drawer-filter-btn${filterMode === "next_week" ? " active" : ""}`} 
+            onClick={() => setFilterMode((prev) => (prev === "next_week" ? "all" : "next_week"))}
+            title={showPastDue ? "Show tasks due in next 7 days and past due. Click again for all tasks." : "Show tasks due in next 7 days. Click again for all tasks."}
           >
             Next 7 Days
           </button>
           <button 
-            className={`btn ${filterMode === "priority" ? "active" : ""}`} 
-            onClick={() => {
-              if (filterMode === "priority") {
-                setPrioritySortDir((prev) => (prev === "asc" ? "desc" : "asc"));
-              } else {
-                setFilterMode("priority");
-              }
-            }}
-            style={{ flex: "1 1 calc(50% - 4px)", fontSize: "0.75rem", padding: "4px" }}
-            title="Sort tasks by priority (1 = most urgent). Click again to toggle order."
+            type="button"
+            className={`btn task-drawer-filter-btn${filterMode === "priority" ? " active" : ""}`} 
+            onClick={handlePriorityClick}
+            title="Sort tasks by priority: 1 = most urgent (↑), 10 first (↓), or click again for all tasks."
           >
             Priority{filterMode === "priority" ? (prioritySortDir === "asc" ? " ↑" : " ↓") : ""}
           </button>

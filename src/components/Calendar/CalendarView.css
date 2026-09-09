@@ -116,6 +116,7 @@
   overflow: hidden;
   position: relative;
   min-width: 160px;
+  container-type: inline-size;
 }
 
 .task-drawer-resizer {
@@ -173,6 +174,34 @@
   background: var(--bg);
   color: var(--text);
   box-sizing: border-box;
+}
+
+.task-drawer-filters {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+
+@container (min-width: 380px) {
+  .task-drawer-filters {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.task-drawer-filter-btn {
+  font-size: 0.75rem;
+  padding: 4px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.task-drawer-filter-btn.active {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
 }
 
 .task-drawer-list {
