@@ -116,7 +116,6 @@
   overflow: hidden;
   position: relative;
   min-width: 160px;
-  max-width: 600px;
 }
 
 .task-drawer-resizer {

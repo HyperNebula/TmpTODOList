@@ -57,7 +57,7 @@ export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskD
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const delta = moveEvent.clientX - startX;
-      const newWidth = Math.min(600, Math.max(160, startWidth + delta));
+      const newWidth = Math.max(160, startWidth + delta);
       setLocalWidth(newWidth);
     };
 
@@ -68,7 +68,7 @@ export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskD
       document.body.style.userSelect = prevUserSelect;
       setIsResizing(false);
       const delta = upEvent.clientX - startX;
-      const finalWidth = Math.min(600, Math.max(160, startWidth + delta));
+      const finalWidth = Math.max(160, startWidth + delta);
       setLocalWidth(finalWidth);
       onWidthChange?.(finalWidth);
     };
