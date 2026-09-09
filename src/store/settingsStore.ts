@@ -390,6 +390,7 @@ const DEFAULT_SETTINGS = {
   filterPresets: [] as import("../types/task").FilterPreset[],
   filterPresetPanelPosition: "hidden" as "left" | "right" | "top" | "hidden",
   filterPresetPanelOpen: false,
+  showPastDue: false,
 };
 
 export interface SettingsState {
@@ -426,6 +427,7 @@ export interface SettingsState {
   filterPresets: import("../types/task").FilterPreset[];
   filterPresetPanelPosition: "left" | "right" | "top" | "hidden";
   filterPresetPanelOpen: boolean;
+  showPastDue: boolean;
 
   setActiveThemeId: (id: string) => void;
   saveCustomTheme: (theme: Theme) => void;
@@ -462,6 +464,7 @@ export interface SettingsState {
   renameFilterPreset: (id: string, name: string) => void;
   setFilterPresetPanelPosition: (position: "left" | "right" | "top" | "hidden") => void;
   setFilterPresetPanelOpen: (open: boolean) => void;
+  setShowPastDue: (show: boolean) => void;
   loadSettings: () => Promise<void>;
   resetSettings: () => void;
 }
@@ -525,6 +528,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   })),
   setFilterPresetPanelPosition: (position) => set({ filterPresetPanelPosition: position }),
   setFilterPresetPanelOpen: (open) => set({ filterPresetPanelOpen: open }),
+  setShowPastDue: (show) => set({ showPastDue: show }),
 
   loadSettings: async () => {
     try {
@@ -563,6 +567,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         filterPresets?: import("../types/task").FilterPreset[];
         filterPresetPanelPosition?: "left" | "right" | "top" | "hidden";
         filterPresetPanelOpen?: boolean;
+        showPastDue?: boolean;
       }>("settings_v1");
       
       if (saved) {
@@ -599,6 +604,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
           ...(saved.filterPresets && { filterPresets: saved.filterPresets }),
           ...(saved.filterPresetPanelPosition && { filterPresetPanelPosition: saved.filterPresetPanelPosition }),
           ...(saved.filterPresetPanelOpen !== undefined && { filterPresetPanelOpen: saved.filterPresetPanelOpen }),
+          ...(saved.showPastDue !== undefined && { showPastDue: saved.showPastDue }),
           settingsLoaded: true,
         });
       } else {
@@ -647,6 +653,7 @@ useSettingsStore.subscribe((state) => {
     filterPresets: state.filterPresets,
     filterPresetPanelPosition: state.filterPresetPanelPosition,
     filterPresetPanelOpen: state.filterPresetPanelOpen,
+    showPastDue: state.showPastDue,
   };
   try {
     const s = getTauriStore();

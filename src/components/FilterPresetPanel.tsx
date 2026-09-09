@@ -13,28 +13,23 @@ interface Props {
 
 type QuickFilter = "today" | "tomorrow" | "week" | null;
 
-function getActiveQuickFilter(filter: FilterState): QuickFilter {
+function getActiveQuickFilter(filter: FilterState, showPastDue: boolean): QuickFilter {
   const today = getTodayRange();
   const tomorrow = getTomorrowRange();
   const week = getWeekRange();
+  const expectedDueAfter = showPastDue ? null : today.dueAfter;
 
-  if (filter.dueAfter === today.dueAfter && filter.dueBefore === today.dueBefore) {
+  if (filter.dueAfter === expectedDueAfter && filter.dueBefore === today.dueBefore) {
     return "today";
   }
-  if (filter.dueAfter === tomorrow.dueAfter && filter.dueBefore === tomorrow.dueBefore) {
+  if (filter.dueAfter === expectedDueAfter && filter.dueBefore === tomorrow.dueBefore) {
     return "tomorrow";
   }
-  if (filter.dueAfter === week.dueAfter && filter.dueBefore === week.dueBefore) {
+  if (filter.dueAfter === expectedDueAfter && filter.dueBefore === week.dueBefore) {
     return "week";
   }
   return null;
 }
-
-const QUICK_FILTERS = [
-  { kind: "today" as const, label: "Due Today", title: "Show only tasks due today" },
-  { kind: "tomorrow" as const, label: "Today & Tomorrow", title: "Show tasks due today and tomorrow" },
-  { kind: "week" as const, label: "Due This Week", title: "Show tasks due within the next 7 days" },
-] as const;
 
 export function FilterPresetPanel({ position }: Props) {
   const {
@@ -45,9 +40,28 @@ export function FilterPresetPanel({ position }: Props) {
     deleteFilterPreset,
     renameFilterPreset,
     saveFilterPreset,
+    showPastDue,
   } = useSettingsStore();
 
   const store = useTaskStore();
+
+  const quickFilters = [
+    {
+      kind: "today" as const,
+      label: "Due Today",
+      title: showPastDue ? "Show tasks due today and past due" : "Show only tasks due today",
+    },
+    {
+      kind: "tomorrow" as const,
+      label: "Today & Tomorrow",
+      title: showPastDue ? "Show tasks due through tomorrow and past due" : "Show tasks due today and tomorrow",
+    },
+    {
+      kind: "week" as const,
+      label: "Due This Week",
+      title: showPastDue ? "Show tasks due within the next 7 days and past due" : "Show tasks due within the next 7 days",
+    },
+  ];
 
   const [promptState, setPromptState] = useState<{
     id: string;
@@ -62,7 +76,7 @@ export function FilterPresetPanel({ position }: Props) {
 
   if (filterPresetPanelPosition !== position) return null;
 
-  const activeQuick = getActiveQuickFilter(store.filter);
+  const activeQuick = getActiveQuickFilter(store.filter, showPastDue);
 
   const applyQuickFilter = (kind: "today" | "tomorrow" | "week") => {
     if (activeQuick === kind) {
@@ -72,7 +86,10 @@ export function FilterPresetPanel({ position }: Props) {
     }
     const ranges = { today: getTodayRange, tomorrow: getTomorrowRange, week: getWeekRange };
     const range = ranges[kind]();
-    store.setFilter({ dueAfter: range.dueAfter, dueBefore: range.dueBefore });
+    store.setFilter({
+      dueAfter: showPastDue ? null : range.dueAfter,
+      dueBefore: range.dueBefore,
+    });
     store.setSort({ column: "dueDate", direction: "asc" });
     store.expandAllTasks();
   };
@@ -93,7 +110,7 @@ export function FilterPresetPanel({ position }: Props) {
     return (
       <div className="filter-preset-panel top-panel">
         <div className="quick-filters">
-          {QUICK_FILTERS.map((qf) => (
+          {quickFilters.map((qf) => (
             <button
               key={qf.kind}
               type="button"
@@ -220,7 +237,7 @@ export function FilterPresetPanel({ position }: Props) {
         </div>
         <div className="sidebar-content">
           <div className="quick-filters vertical">
-            {QUICK_FILTERS.map((qf) => (
+            {quickFilters.map((qf) => (
               <button
                 key={qf.kind}
                 type="button"
