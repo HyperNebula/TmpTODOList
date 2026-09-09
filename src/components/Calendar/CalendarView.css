@@ -116,6 +116,7 @@
   overflow: hidden;
   position: relative;
   min-width: 160px;
+  max-width: calc(100vw - 60px);
   container-type: inline-size;
 }
 

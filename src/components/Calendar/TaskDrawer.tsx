@@ -46,6 +46,15 @@ export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskD
     setLocalWidth(width);
   }, [width]);
 
+  useEffect(() => {
+    const handleWindowResize = () => {
+      const maxWidth = Math.max(160, window.innerWidth - 60);
+      setLocalWidth((prev) => (prev > maxWidth ? maxWidth : prev));
+    };
+    window.addEventListener("resize", handleWindowResize);
+    return () => window.removeEventListener("resize", handleWindowResize);
+  }, []);
+
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -59,7 +68,8 @@ export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskD
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const delta = moveEvent.clientX - startX;
-      const newWidth = Math.max(160, startWidth + delta);
+      const maxWidth = Math.max(160, window.innerWidth - 60);
+      const newWidth = Math.min(maxWidth, Math.max(160, startWidth + delta));
       setLocalWidth(newWidth);
     };
 
@@ -70,7 +80,8 @@ export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskD
       document.body.style.userSelect = prevUserSelect;
       setIsResizing(false);
       const delta = upEvent.clientX - startX;
-      const finalWidth = Math.max(160, startWidth + delta);
+      const maxWidth = Math.max(160, window.innerWidth - 60);
+      const finalWidth = Math.min(maxWidth, Math.max(160, startWidth + delta));
       setLocalWidth(finalWidth);
       onWidthChange?.(finalWidth);
     };
