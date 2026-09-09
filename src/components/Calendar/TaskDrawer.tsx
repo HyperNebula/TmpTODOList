@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Task } from "../../types/task";
 import { getPriorityColor } from "./colors";
 
 interface TaskDrawerProps {
   tasks: Task[];
+  width?: number;
+  onWidthChange?: (width: number) => void;
   onClose: () => void;
 }
 
@@ -18,10 +20,49 @@ interface TreeNode {
  * A slide-in sidebar showing all non-archived tasks.
  * Tasks are draggable onto the calendar time grid to create timeblocks.
  */
-export function TaskDrawer({ tasks, onClose }: TaskDrawerProps) {
+export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskDrawerProps) {
   const [search, setSearch] = useState("");
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+  const [localWidth, setLocalWidth] = useState(width);
+  const [isResizing, setIsResizing] = useState(false);
+
+  useEffect(() => {
+    setLocalWidth(width);
+  }, [width]);
+
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startWidth = localWidth;
+
+    const prevCursor = document.body.style.cursor;
+    const prevUserSelect = document.body.style.userSelect;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const newWidth = Math.min(600, Math.max(160, startWidth + delta));
+      setLocalWidth(newWidth);
+    };
+
+    const handleMouseUp = (upEvent: MouseEvent) => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = prevCursor;
+      document.body.style.userSelect = prevUserSelect;
+      setIsResizing(false);
+      const delta = upEvent.clientX - startX;
+      const finalWidth = Math.min(600, Math.max(160, startWidth + delta));
+      setLocalWidth(finalWidth);
+      onWidthChange?.(finalWidth);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
 
   // Date utilities for filtering
   const toIsoDate = (d: Date) =>
@@ -166,7 +207,12 @@ export function TaskDrawer({ tasks, onClose }: TaskDrawerProps) {
   }
 
   return (
-    <div className="task-drawer">
+    <div className="task-drawer" style={{ width: localWidth }}>
+      <div
+        className={`task-drawer-resizer${isResizing ? " is-resizing" : ""}`}
+        onMouseDown={handleResizeMouseDown}
+        title="Drag to resize sidebar"
+      />
       <div className="task-drawer-header">
         <span className="task-drawer-title">📋 Tasks</span>
         <button className="task-drawer-close" onClick={onClose} title="Close panel">

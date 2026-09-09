@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useMemo } from "react";
 import { useTaskStore } from "../../store/taskStore";
 import { useCalendarStore } from "../../store/calendarStore";
+import { useSettingsStore } from "../../store/settingsStore";
 import { TaskDrawer } from "./TaskDrawer";
 import { TimeGrid } from "./TimeGrid";
 import { CalendarToolbar } from "./CalendarToolbar";
@@ -78,6 +79,7 @@ export function CalendarView({
 }: CalendarViewProps) {
   const store = useTaskStore();
   const calendarStore = useCalendarStore();
+  const { taskDrawerWidth, setTaskDrawerWidth } = useSettingsStore();
   const tasks = store.file.tasks;
   const timeblocks = calendarStore.timeblocks;
   const filePath = store.filePath;
@@ -279,7 +281,12 @@ export function CalendarView({
       {/* ── Main area ───────────────────────────────────────────────────────── */}
       <div className="cal-body">
         {drawerOpen && (
-          <TaskDrawer tasks={tasks} onClose={() => setDrawerOpen(false)} />
+          <TaskDrawer
+            tasks={tasks}
+            width={taskDrawerWidth}
+            onWidthChange={setTaskDrawerWidth}
+            onClose={() => setDrawerOpen(false)}
+          />
         )}
 
         <div className="cal-grid-container">

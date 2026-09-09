@@ -391,6 +391,7 @@ const DEFAULT_SETTINGS = {
   filterPresetPanelPosition: "hidden" as "left" | "right" | "top" | "hidden",
   filterPresetPanelOpen: false,
   showPastDue: false,
+  taskDrawerWidth: 240,
 };
 
 export interface SettingsState {
@@ -428,6 +429,7 @@ export interface SettingsState {
   filterPresetPanelPosition: "left" | "right" | "top" | "hidden";
   filterPresetPanelOpen: boolean;
   showPastDue: boolean;
+  taskDrawerWidth: number;
 
   setActiveThemeId: (id: string) => void;
   saveCustomTheme: (theme: Theme) => void;
@@ -465,6 +467,7 @@ export interface SettingsState {
   setFilterPresetPanelPosition: (position: "left" | "right" | "top" | "hidden") => void;
   setFilterPresetPanelOpen: (open: boolean) => void;
   setShowPastDue: (show: boolean) => void;
+  setTaskDrawerWidth: (width: number) => void;
   loadSettings: () => Promise<void>;
   resetSettings: () => void;
 }
@@ -529,6 +532,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setFilterPresetPanelPosition: (position) => set({ filterPresetPanelPosition: position }),
   setFilterPresetPanelOpen: (open) => set({ filterPresetPanelOpen: open }),
   setShowPastDue: (show) => set({ showPastDue: show }),
+  setTaskDrawerWidth: (width) => set({ taskDrawerWidth: width }),
 
   loadSettings: async () => {
     try {
@@ -568,6 +572,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         filterPresetPanelPosition?: "left" | "right" | "top" | "hidden";
         filterPresetPanelOpen?: boolean;
         showPastDue?: boolean;
+        taskDrawerWidth?: number;
       }>("settings_v1");
       
       if (saved) {
@@ -605,6 +610,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
           ...(saved.filterPresetPanelPosition && { filterPresetPanelPosition: saved.filterPresetPanelPosition }),
           ...(saved.filterPresetPanelOpen !== undefined && { filterPresetPanelOpen: saved.filterPresetPanelOpen }),
           ...(saved.showPastDue !== undefined && { showPastDue: saved.showPastDue }),
+          ...(saved.taskDrawerWidth !== undefined && { taskDrawerWidth: saved.taskDrawerWidth }),
           settingsLoaded: true,
         });
       } else {
@@ -654,6 +660,7 @@ useSettingsStore.subscribe((state) => {
     filterPresetPanelPosition: state.filterPresetPanelPosition,
     filterPresetPanelOpen: state.filterPresetPanelOpen,
     showPastDue: state.showPastDue,
+    taskDrawerWidth: state.taskDrawerWidth,
   };
   try {
     const s = getTauriStore();
