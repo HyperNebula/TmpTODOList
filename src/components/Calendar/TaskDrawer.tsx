@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { Task } from "../../types/task";
 import { getPriorityColor } from "./colors";
 
@@ -9,11 +9,23 @@ interface TaskDrawerProps {
   onClose: () => void;
 }
 
-type FilterMode = "all" | "today" | "next_week";
+type FilterMode = "all" | "today" | "next_week" | "priority";
 
 interface TreeNode {
   task: Task;
   children: TreeNode[];
+}
+
+function comparePriority(a: Task, b: Task, dir: "asc" | "desc"): number {
+  if (a.priority === null && b.priority === null) return a.order - b.order;
+  if (a.priority === null) return 1;
+  if (b.priority === null) return -1;
+  if (dir === "asc") {
+    if (a.priority !== b.priority) return a.priority - b.priority;
+  } else {
+    if (a.priority !== b.priority) return b.priority - a.priority;
+  }
+  return a.order - b.order;
 }
 
 /**
@@ -23,6 +35,7 @@ interface TreeNode {
 export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskDrawerProps) {
   const [search, setSearch] = useState("");
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
+  const [prioritySortDir, setPrioritySortDir] = useState<"asc" | "desc">("asc");
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [localWidth, setLocalWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
@@ -96,51 +109,60 @@ export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskD
     return true;
   });
 
-  // Since we want to preserve hierarchy, if a child matches, we should ideally include its parents.
-  const includedIds = new Set(baseFiltered.map(t => t.id));
-  
-  // Make sure parents of included items are also included
-  let addedNew = true;
-  while (addedNew) {
-    addedNew = false;
-    for (const id of Array.from(includedIds)) {
-      const task = tasks.find(t => t.id === id);
-      if (task && task.parentId && !includedIds.has(task.parentId)) {
-        includedIds.add(task.parentId);
-        addedNew = true;
+  const isPriorityMode = filterMode === "priority";
+
+  const prioritySortedTasks = useMemo(() => {
+    if (!isPriorityMode) return [];
+    return [...baseFiltered].sort((a, b) => comparePriority(a, b, prioritySortDir));
+  }, [baseFiltered, isPriorityMode, prioritySortDir]);
+
+  // Build tree only when not in priority mode
+  const rootNodes: TreeNode[] = [];
+  if (!isPriorityMode) {
+    const includedIds = new Set(baseFiltered.map(t => t.id));
+    
+    // Make sure parents of included items are also included
+    let addedNew = true;
+    while (addedNew) {
+      addedNew = false;
+      for (const id of Array.from(includedIds)) {
+        const task = tasks.find(t => t.id === id);
+        if (task && task.parentId && !includedIds.has(task.parentId)) {
+          includedIds.add(task.parentId);
+          addedNew = true;
+        }
       }
     }
-  }
 
-  // Build tree
-  const treeNodes = new Map<string, TreeNode>();
-  const rootNodes: TreeNode[] = [];
+    // Build tree
+    const treeNodes = new Map<string, TreeNode>();
 
-  // Initialize nodes for all included tasks
-  for (const t of tasks) {
-    if (includedIds.has(t.id)) {
-      treeNodes.set(t.id, { task: t, children: [] });
+    // Initialize nodes for all included tasks
+    for (const t of tasks) {
+      if (includedIds.has(t.id)) {
+        treeNodes.set(t.id, { task: t, children: [] });
+      }
     }
-  }
 
-  // Assign children to parents
-  for (const node of Array.from(treeNodes.values())) {
-    const parentId = node.task.parentId;
-    if (parentId && treeNodes.has(parentId)) {
-      treeNodes.get(parentId)!.children.push(node);
-    } else {
-      rootNodes.push(node);
+    // Assign children to parents
+    for (const node of Array.from(treeNodes.values())) {
+      const parentId = node.task.parentId;
+      if (parentId && treeNodes.has(parentId)) {
+        treeNodes.get(parentId)!.children.push(node);
+      } else {
+        rootNodes.push(node);
+      }
     }
-  }
 
-  // Sort nodes
-  const sortNodes = (nodes: TreeNode[]) => {
-    nodes.sort((a, b) => a.task.order - b.task.order);
-    for (const n of nodes) {
-      sortNodes(n.children);
-    }
-  };
-  sortNodes(rootNodes);
+    // Sort nodes
+    const sortNodes = (nodes: TreeNode[]) => {
+      nodes.sort((a, b) => a.task.order - b.task.order);
+      for (const n of nodes) {
+        sortNodes(n.children);
+      }
+    };
+    sortNodes(rootNodes);
+  }
 
   function handleDragStart(e: React.DragEvent, taskId: string) {
     e.dataTransfer.setData("text/plain", taskId);
@@ -228,36 +250,98 @@ export function TaskDrawer({ tasks, width = 240, onWidthChange, onClose }: TaskD
           onChange={(e) => setSearch(e.target.value)}
           className="task-drawer-search-input"
         />
-        <div className="task-drawer-filters" style={{ display: "flex", gap: "4px", marginTop: "8px" }}>
+        <div className="task-drawer-filters" style={{ display: "flex", gap: "4px", marginTop: "8px", flexWrap: "wrap" }}>
           <button 
             className={`btn ${filterMode === "all" ? "active" : ""}`} 
             onClick={() => setFilterMode("all")}
-            style={{ flex: 1, fontSize: "0.75rem", padding: "4px" }}
+            style={{ flex: "1 1 calc(50% - 4px)", fontSize: "0.75rem", padding: "4px" }}
           >
             All
           </button>
           <button 
             className={`btn ${filterMode === "today" ? "active" : ""}`} 
             onClick={() => setFilterMode("today")}
-            style={{ flex: 1, fontSize: "0.75rem", padding: "4px" }}
+            style={{ flex: "1 1 calc(50% - 4px)", fontSize: "0.75rem", padding: "4px" }}
           >
             Today
           </button>
           <button 
             className={`btn ${filterMode === "next_week" ? "active" : ""}`} 
             onClick={() => setFilterMode("next_week")}
-            style={{ flex: 1, fontSize: "0.75rem", padding: "4px" }}
+            style={{ flex: "1 1 calc(50% - 4px)", fontSize: "0.75rem", padding: "4px" }}
           >
             Next 7 Days
+          </button>
+          <button 
+            className={`btn ${filterMode === "priority" ? "active" : ""}`} 
+            onClick={() => {
+              if (filterMode === "priority") {
+                setPrioritySortDir((prev) => (prev === "asc" ? "desc" : "asc"));
+              } else {
+                setFilterMode("priority");
+              }
+            }}
+            style={{ flex: "1 1 calc(50% - 4px)", fontSize: "0.75rem", padding: "4px" }}
+            title="Sort tasks by priority (1 = most urgent). Click again to toggle order."
+          >
+            Priority{filterMode === "priority" ? (prioritySortDir === "asc" ? " ↑" : " ↓") : ""}
           </button>
         </div>
       </div>
 
       <ul className="task-drawer-list" style={{ paddingLeft: 0 }}>
-        {rootNodes.length === 0 && (
-          <li className="task-drawer-empty" style={{ listStyle: "none" }}>No tasks found.</li>
+        {isPriorityMode ? (
+          prioritySortedTasks.length === 0 ? (
+            <li className="task-drawer-empty" style={{ listStyle: "none" }}>No tasks found.</li>
+          ) : (
+            prioritySortedTasks.map((t) => (
+              <li key={t.id} className="task-drawer-item-container" style={{ listStyle: "none" }}>
+                <div
+                  className={`task-drawer-item${t.done ? " task-drawer-item--done" : ""}`}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, t.id)}
+                  title={`${t.title} ${t.priority !== null ? `(Priority ${t.priority})` : "(No priority)"}`}
+                  style={{ display: "flex", alignItems: "center" }}
+                >
+                  <span 
+                    className="task-drawer-item-indicator" 
+                    style={t.done ? undefined : (t.priority !== null ? { backgroundColor: getPriorityColor(t.priority) } : undefined)}
+                  />
+                  <span className="task-drawer-item-title">{t.title || "(untitled)"}</span>
+                  {t.priority !== null && (
+                    <span 
+                      className="task-drawer-item-prio" 
+                      style={{ 
+                        fontSize: "0.72rem", 
+                        padding: "1px 4px", 
+                        borderRadius: "3px", 
+                        background: "rgba(128,128,128,0.15)", 
+                        color: "var(--text-muted)", 
+                        marginRight: "4px",
+                        fontWeight: 600,
+                        flexShrink: 0
+                      }}
+                    >
+                      P{t.priority}
+                    </span>
+                  )}
+                  {t.timeEstimateMinutes != null && (
+                    <span className="task-drawer-item-est">
+                      {t.timeEstimateMinutes}m
+                    </span>
+                  )}
+                </div>
+              </li>
+            ))
+          )
+        ) : (
+          <>
+            {rootNodes.length === 0 && (
+              <li className="task-drawer-empty" style={{ listStyle: "none" }}>No tasks found.</li>
+            )}
+            {renderTree(rootNodes)}
+          </>
         )}
-        {renderTree(rootNodes)}
       </ul>
     </div>
   );
